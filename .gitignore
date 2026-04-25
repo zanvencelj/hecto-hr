@@ -1,0 +1,14 @@
+node_modules
+.claude
+.nx
+.vscode
+
+# Build outputs
+dist
+out-tsc
+test-output
+
+# Environment files — copy .env.example and fill in values
+.env
+.env.local
+.env.*.local

@@ -1,0 +1,39 @@
+[tools]
+node = "22"
+pnpm = "latest"
+
+# ---- Docker Compose ----
+
+[tasks.up]
+description = "Start all services with Docker Compose"
+run = "docker compose up -d"
+
+[tasks.down]
+description = "Stop all Docker Compose services"
+run = "docker compose down"
+
+[tasks.build]
+description = "Build all services with Docker Compose"
+run = "docker compose build"
+
+# ---- Quality ----
+
+[tasks.test]
+description = "Run all unit tests"
+run = "pnpm nx run-many -t test"
+
+[tasks.test-backend]
+description = "Run backend unit tests in watch mode"
+run = "pnpm nx test backend --watch"
+
+[tasks.lint]
+description = "Lint all projects"
+run = "pnpm nx run-many -t lint"
+
+[tasks.typecheck]
+description = "Type-check all projects"
+run = "pnpm nx run-many -t typecheck"
+
+[tasks.check]
+description = "Run lint + typecheck + tests"
+run = "pnpm nx run-many -t lint typecheck test"
