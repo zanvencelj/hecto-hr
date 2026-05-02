@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import type { UserPublic } from '@hecto/shared-types';
+import type { UserPublic, UserRole } from '@hecto/shared-types';
 import type { User } from '@hecto/database';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -8,6 +8,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 export interface CreateFromVerifiedEmailData {
   email: string;
   passwordHash: string;
+  organizationId: string;
+  role: UserRole;
   firstName: string | null;
   lastName: string | null;
 }
@@ -50,6 +52,8 @@ export class UsersService {
     const user = await this.usersRepository.create({
       email: data.email.toLowerCase(),
       passwordHash: data.passwordHash,
+      organizationId: data.organizationId,
+      role: data.role,
       firstName: data.firstName,
       lastName: data.lastName,
     });
@@ -75,16 +79,20 @@ export class UsersService {
     return this.usersRepository.updateLastLogin(id);
   }
 
+  async updatePassword(id: string, newPasswordHash: string): Promise<void> {
+    await this.usersRepository.update(id, { passwordHash: newPasswordHash });
+  }
+
   toPublic(user: User): UserPublic {
     return {
       id: user.id,
+      organizationId: user.organizationId ?? null,
       email: user.email,
       username: user.username ?? null,
       firstName: user.firstName ?? null,
       lastName: user.lastName ?? null,
+      role: user.role,
       isActive: user.isActive,
-      isSuperuser: user.isSuperuser,
-      isStaff: user.isStaff,
       dateJoined: user.dateJoined.toISOString(),
       lastLogin: user.lastLogin?.toISOString() ?? null,
     };

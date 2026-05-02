@@ -1,13 +1,66 @@
-x-backend-build: &backend-build
+# Development compose — run with: docker compose up
+# Prerequisites: copy .env.example to .env and fill in JWT_*/EMAIL_VERIFICATION_SECRET values
+# Rebuild dev image after lockfile or Dockerfile.dev changes: docker compose build
+
+x-logging: &default-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-app-dev: &app-dev
   build:
     context: .
-    dockerfile: apps/backend/Dockerfile
-  image: hectohr-backend:latest
-  restart: unless-stopped
+    dockerfile: apps/backend/Dockerfile.dev
+  image: hectohr-backend-dev:latest
+  <<: *default-logging
+  volumes:
+    # Bind-mount only source directories so node_modules stays from the image
+    - ./apps/backend/src:/app/apps/backend/src:ro
+    - ./libs:/app/libs:ro
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    NODE_ENV: development
+    DATABASE_URL: postgresql://${POSTGRES_USER:-hectohr}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-hectohr}
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    SMTP_HOST: mailhog
+    SMTP_PORT: 1025
+    SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
+    MINIO_ENDPOINT: http://minio:9000
+    MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+    MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+    MINIO_BUCKET: ${MINIO_BUCKET:-hectohr}
+    APP_URL: ${APP_URL:-http://localhost:4200}
 
 services:
+  # ── Infrastructure ───────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:17-alpine
+    <<: *default-logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hectohr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-hectohr}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hectohr} -d ${POSTGRES_DB:-hectohr}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
+    <<: *default-logging
     ports:
       - "${REDIS_PORT:-6379}:6379"
     command: >
@@ -19,93 +72,167 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   mailhog:
     image: mailhog/mailhog:latest
+    <<: *default-logging
     ports:
       - "${MAILHOG_SMTP_PORT:-1025}:1025"
       - "${MAILHOG_UI_PORT:-8025}:8025"
     restart: unless-stopped
 
-  postgres:
-    image: postgres:17-alpine
+  minio:
+    image: minio/minio:latest
+    <<: *default-logging
+    command: server /data --console-address ":9001"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-hectohr}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-      POSTGRES_DB: ${POSTGRES_DB:-hectohr}
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - minio_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hectohr} -d ${POSTGRES_DB:-hectohr}"]
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     restart: unless-stopped
 
-  backend:
-    <<: *backend-build
-    ports:
-      - "${BACKEND_PORT:-3000}:3000"
-    environment:
-      NODE_ENV: production
-      PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-hectohr}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-hectohr}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
-      JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-7d}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_TLS: ${REDIS_TLS:-}
-      SMTP_HOST: ${SMTP_HOST:-mailhog}
-      SMTP_PORT: ${SMTP_PORT:-1025}
-      SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
-      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET}
+  # ── App ──────────────────────────────────────────────────────────────────────
+
+  migrate:
+    <<: *app-dev
+    volumes:
+      - ./libs:/app/libs:ro
+    working_dir: /app
+    command: pnpm db:migrate
     depends_on:
       postgres:
         condition: service_healthy
+    restart: on-failure
+
+  backend:
+    <<: *app-dev
+    working_dir: /app/apps/backend
+    command: pnpm exec nodemon
+    environment:
+      NODE_ENV: development
+      SERVICE_NAME: backend
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hectohr}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-hectohr}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-hectohr}
+      APP_URL: ${APP_URL:-http://localhost:4200}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    <<: *app-dev
+    working_dir: /app/apps/backend
+    command: pnpm exec nodemon --config nodemon.worker.json
+    environment:
+      NODE_ENV: development
+      SERVICE_NAME: worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hectohr}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-hectohr}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Monitoring ───────────────────────────────────────────────────────────────
+
+  loki:
+    image: grafana/loki:3.4
+    <<: *default-logging
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.4
+    <<: *default-logging
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.6
+    <<: *default-logging
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3001}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      loki:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
-
-  worker:
-    <<: *backend-build
-    command: ["node", "worker.js"]
-    environment:
-      NODE_ENV: production
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_TLS: ${REDIS_TLS:-}
-      SMTP_HOST: ${SMTP_HOST:-mailhog}
-      SMTP_PORT: ${SMTP_PORT:-1025}
-      SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_SECURE: ${SMTP_SECURE:-}
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('net').connect(Number(process.env.REDIS_PORT||6379),process.env.REDIS_HOST||'redis').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      start_period: 20s
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
+  loki_data:
+  grafana_data:

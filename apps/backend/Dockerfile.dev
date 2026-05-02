@@ -1,0 +1,29 @@
+FROM node:22-alpine
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app
+
+# Install all deps including devDependencies (SWC, nodemon, etc.)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY apps/backend/package.json apps/backend/package.json
+COPY libs/backend/auth/package.json libs/backend/auth/package.json
+COPY libs/backend/database/package.json libs/backend/database/package.json
+COPY libs/backend/mail/package.json libs/backend/mail/package.json
+COPY libs/backend/queue/package.json libs/backend/queue/package.json
+COPY libs/backend/storage/package.json libs/backend/storage/package.json
+COPY libs/backend/users/package.json libs/backend/users/package.json
+COPY libs/shared/types/package.json libs/shared/types/package.json
+RUN pnpm install --frozen-lockfile
+
+# Tsconfig files are needed by @swc-node/register for path resolution
+COPY tsconfig.base.json ./
+COPY apps/backend/tsconfig*.json apps/backend/
+# nodemon configs are baked in — changes require docker compose build
+COPY apps/backend/nodemon.json apps/backend/nodemon.json
+COPY apps/backend/nodemon.worker.json apps/backend/nodemon.worker.json
+# drizzle config needed by the migrate service
+COPY drizzle.config.ts ./
+
+WORKDIR /app/apps/backend

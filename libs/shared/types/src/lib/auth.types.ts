@@ -1,10 +1,10 @@
-import type { UserPublic } from './user.types';
+import type { UserPublic, UserRole } from './user.types';
 
 export interface AccessTokenPayload {
   sub: string;
   email: string;
-  isSuperuser: boolean;
-  isStaff: boolean;
+  organizationId: string;
+  role: UserRole;
   sessionId: string;
   iat?: number;
   exp?: number;
@@ -13,6 +13,7 @@ export interface AccessTokenPayload {
 export interface RefreshTokenPayload {
   sub: string;
   sessionId: string;
+  organizationId: string;
   type: 'refresh';
   iat?: number;
   exp?: number;
@@ -38,4 +39,8 @@ export interface ResendCodeResponse {
   message: string;
   resentCount: number;
   nextResendAvailableAt: string | null;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
 }

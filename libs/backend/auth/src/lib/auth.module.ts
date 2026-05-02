@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { SessionsRepository } from './sessions.repository';
 import { EmailVerificationRepository } from './email-verification.repository';
+import { OrganizationsRepository } from './organizations.repository';
+import { PasswordResetsRepository } from './password-resets.repository';
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { EmailVerificationRepository } from './email-verification.repository';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SessionsRepository, EmailVerificationRepository, JwtAuthGuard],
+  providers: [AuthService, SessionsRepository, EmailVerificationRepository, OrganizationsRepository, PasswordResetsRepository, JwtAuthGuard],
   exports: [JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

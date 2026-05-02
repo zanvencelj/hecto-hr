@@ -2,6 +2,7 @@ import { pgTable, uuid, varchar, smallint, timestamp, jsonb, index } from 'drizz
 
 export type PendingRegistrationData = {
   passwordHash: string;
+  organizationName: string;
   firstName: string | null;
   lastName: string | null;
   deviceName: string | null;

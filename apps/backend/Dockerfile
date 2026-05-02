@@ -12,6 +12,7 @@ COPY libs/backend/auth/package.json libs/backend/auth/package.json
 COPY libs/backend/database/package.json libs/backend/database/package.json
 COPY libs/backend/mail/package.json libs/backend/mail/package.json
 COPY libs/backend/queue/package.json libs/backend/queue/package.json
+COPY libs/backend/storage/package.json libs/backend/storage/package.json
 COPY libs/backend/users/package.json libs/backend/users/package.json
 COPY libs/shared/types/package.json libs/shared/types/package.json
 # onlyBuiltDependencies in package.json controls which scripts run (native binaries, etc.)
@@ -33,6 +34,13 @@ RUN pnpm nx sync && \
     pnpm nx run backend:prune && \
     pnpm nx run backend:build-worker && \
     mkdir -p apps/backend/dist/workspace_modules apps/backend/dist/assets
+
+# ---- migrator stage (used by docker-compose.prod.yml migrate service) ----
+FROM deps AS migrator
+WORKDIR /app
+COPY drizzle.config.ts ./
+COPY libs/backend/database/migrations ./libs/backend/database/migrations
+CMD ["pnpm", "db:migrate"]
 
 # ---- runner stage ----
 FROM base AS runner

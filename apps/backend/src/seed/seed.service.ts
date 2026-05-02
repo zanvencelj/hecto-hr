@@ -1,8 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { DATABASE_CONNECTION, type Database, users } from '@hecto/database';
+import { DATABASE_CONNECTION, type Database, users, organizations } from '@hecto/database';
 
 const SEED_PASSWORD = 'hecto123';
+const DEV_ORG_NAME = 'Hecto Dev';
+const DEV_ORG_SLUG = 'hecto-dev';
 
 const SEED_USERS = [
   {
@@ -11,35 +13,31 @@ const SEED_USERS = [
     firstName: 'Admin',
     lastName: 'User',
     isActive: true,
-    isSuperuser: true,
-    isStaff: true,
+    role: 'admin' as const,
   },
   {
-    email: 'staff@hecto.dev',
-    username: 'staff',
-    firstName: 'Staff',
-    lastName: 'User',
+    email: 'hr@hecto.dev',
+    username: 'hr',
+    firstName: 'HR',
+    lastName: 'Manager',
     isActive: true,
-    isSuperuser: false,
-    isStaff: true,
+    role: 'hr' as const,
   },
   {
-    email: 'alice@hecto.dev',
-    username: 'alice',
+    email: 'manager@hecto.dev',
+    username: 'manager',
+    firstName: 'Team',
+    lastName: 'Manager',
+    isActive: true,
+    role: 'manager' as const,
+  },
+  {
+    email: 'employee@hecto.dev',
+    username: 'employee',
     firstName: 'Alice',
     lastName: 'Smith',
     isActive: true,
-    isSuperuser: false,
-    isStaff: false,
-  },
-  {
-    email: 'bob@hecto.dev',
-    username: 'bob',
-    firstName: 'Bob',
-    lastName: 'Jones',
-    isActive: true,
-    isSuperuser: false,
-    isStaff: false,
+    role: 'employee' as const,
   },
 ];
 
@@ -54,11 +52,32 @@ export class SeedService {
 
   async run(): Promise<void> {
     this.logger.log('Starting database seed...');
-    await this.seedUsers();
+    const orgId = await this.seedOrganization();
+    await this.seedUsers(orgId);
     this.logger.log('Seed completed.');
   }
 
-  private async seedUsers(): Promise<void> {
+  private async seedOrganization(): Promise<string> {
+    const existing = await this.db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .limit(1);
+
+    if (existing[0]) {
+      this.logger.log(`Skipped organization (already exists): ${DEV_ORG_SLUG}`);
+      return existing[0].id;
+    }
+
+    const inserted = await this.db
+      .insert(organizations)
+      .values({ name: DEV_ORG_NAME, slug: DEV_ORG_SLUG })
+      .returning({ id: organizations.id });
+
+    this.logger.log(`Created organization: ${DEV_ORG_SLUG}`);
+    return inserted[0]!.id;
+  }
+
+  private async seedUsers(organizationId: string): Promise<void> {
     const passwordHash = await argon2.hash(SEED_PASSWORD, {
       type: argon2.argon2id,
       memoryCost: 65536,
@@ -69,12 +88,12 @@ export class SeedService {
     for (const user of SEED_USERS) {
       const inserted = await this.db
         .insert(users)
-        .values({ ...user, passwordHash })
+        .values({ ...user, passwordHash, organizationId })
         .onConflictDoNothing({ target: users.email })
         .returning({ email: users.email });
 
       if (inserted.length > 0) {
-        this.logger.log(`Created user: ${user.email}`);
+        this.logger.log(`Created user: ${user.email} (${user.role})`);
       } else {
         this.logger.log(`Skipped (already exists): ${user.email}`);
       }

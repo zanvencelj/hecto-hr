@@ -8,7 +8,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "seed": "node --require @swc-node/register apps/backend/src/seed/seed.ts"
+    "seed": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register apps/backend/src/seed/seed.ts"
   },
   "private": true,
   "devDependencies": {

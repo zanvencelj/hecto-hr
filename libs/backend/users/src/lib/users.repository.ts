@@ -1,6 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { DATABASE_CONNECTION, type Database, users, type User, type NewUser } from '@hecto/database';
+import { and, eq } from 'drizzle-orm';
+import {
+  DATABASE_CONNECTION,
+  type Database,
+  users,
+  type User,
+  type NewUser,
+  notDeleted,
+} from '@hecto/database';
 
 @Injectable()
 export class UsersRepository {
@@ -13,7 +20,7 @@ export class UsersRepository {
     const result = await this.db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(and(eq(users.email, email), notDeleted(users.deletedAt)))
       .limit(1);
     return result[0];
   }
@@ -22,7 +29,7 @@ export class UsersRepository {
     const result = await this.db
       .select()
       .from(users)
-      .where(eq(users.id, id))
+      .where(and(eq(users.id, id), notDeleted(users.deletedAt)))
       .limit(1);
     return result[0];
   }
@@ -39,12 +46,22 @@ export class UsersRepository {
       .where(eq(users.id, id));
   }
 
-  async update(id: string, data: Partial<Omit<User, 'id' | 'createdAt' | 'dateJoined'>>): Promise<User> {
+  async update(
+    id: string,
+    data: Partial<Omit<User, 'id' | 'createdAt' | 'dateJoined'>>,
+  ): Promise<User> {
     const result = await this.db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return result[0]!;
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ deletedAt: new Date(), updatedAt: new Date(), isActive: false })
+      .where(eq(users.id, id));
   }
 }

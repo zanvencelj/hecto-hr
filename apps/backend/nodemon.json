@@ -1,0 +1,7 @@
+{
+  "watch": ["src", "../../libs"],
+  "ext": "ts,json",
+  "ignore": ["**/*.spec.ts", "**/*.test.ts", "dist"],
+  "exec": "SWC_NODE_PROJECT=./tsconfig.runtime.json node --require @swc-node/register src/main.ts",
+  "signal": "SIGTERM"
+}

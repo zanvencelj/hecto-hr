@@ -1,11 +1,15 @@
 import { pgTable, uuid, varchar, boolean, timestamp, text } from 'drizzle-orm/pg-core';
 import { users } from './users.schema';
+import { organizations } from './organizations.schema';
 
 export const sessions = pgTable('sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id').references(() => organizations.id, {
+    onDelete: 'cascade',
+  }),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: text('user_agent'),
   deviceName: varchar('device_name', { length: 255 }),

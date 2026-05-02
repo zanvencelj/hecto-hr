@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { createHmac, timingSafeEqual, randomInt } from 'crypto';
+import { createHash, createHmac, timingSafeEqual, randomBytes, randomInt } from 'crypto';
 import * as argon2 from 'argon2';
 import type { Request, Response } from 'express';
 import type {
@@ -22,6 +22,8 @@ import type {
   SessionInfo,
   RegistrationInitiatedResponse,
   ResendCodeResponse,
+  ForgotPasswordResponse,
+  UserRole,
 } from '@hecto/shared-types';
 import { UsersService } from '@hecto/users';
 import { TasksQueueService } from '@hecto/queue';
@@ -31,14 +33,17 @@ import { VerifyEmailCodeDto } from './dto/verify-email-code.dto';
 import { ResendVerificationCodeDto } from './dto/resend-verification-code.dto';
 import { SessionsRepository } from './sessions.repository';
 import { EmailVerificationRepository } from './email-verification.repository';
+import { OrganizationsRepository } from './organizations.repository';
+import { PasswordResetsRepository } from './password-resets.repository';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
-const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
-const RESEND_COOLDOWN_MS = 30 * 1000; // 30 seconds
+const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 30 * 1000;
 const MAX_RESENDS = 3;
 const MAX_WRONG_ATTEMPTS = 5;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -57,6 +62,8 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly sessionsRepository: SessionsRepository,
     private readonly emailVerificationRepository: EmailVerificationRepository,
+    private readonly organizationsRepository: OrganizationsRepository,
+    private readonly passwordResetsRepository: PasswordResetsRepository,
     private readonly tasksQueueService: TasksQueueService,
   ) {
     this.isProd = configService.get('NODE_ENV') === 'production';
@@ -76,6 +83,7 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + this.refreshExpiryMs);
     const session = await this.sessionsRepository.create({
       userId: user.id,
+      organizationId: user.organizationId ?? null,
       ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent'] ?? null,
       deviceName: dto.deviceName ?? detectDevice(req.headers['user-agent']),
@@ -86,8 +94,8 @@ export class AuthService {
     const { accessToken, refreshToken } = await this.issueTokens(
       user.id,
       user.email,
-      user.isSuperuser,
-      user.isStaff,
+      user.organizationId ?? '',
+      user.role,
       session.id,
     );
 
@@ -123,6 +131,7 @@ export class AuthService {
       codeHash,
       pendingData: {
         passwordHash,
+        organizationName: dto.organizationName,
         firstName: dto.firstName ?? null,
         lastName: dto.lastName ?? null,
         deviceName: dto.deviceName ?? null,
@@ -184,9 +193,17 @@ export class AuthService {
     }
 
     const { pendingData } = verification;
+    const slug = await this.resolveUniqueSlug(pendingData.organizationName);
+    const org = await this.organizationsRepository.create({
+      name: pendingData.organizationName,
+      slug,
+    });
+
     const user = await this.usersService.createFromVerifiedEmail({
       email: verification.email,
       passwordHash: pendingData.passwordHash,
+      organizationId: org.id,
+      role: 'admin',
       firstName: pendingData.firstName,
       lastName: pendingData.lastName,
     });
@@ -194,6 +211,7 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + this.refreshExpiryMs);
     const session = await this.sessionsRepository.create({
       userId: user.id,
+      organizationId: org.id,
       ipAddress: pendingData.ipAddress ?? getClientIp(req),
       userAgent: pendingData.userAgent ?? req.headers['user-agent'] ?? null,
       deviceName: pendingData.deviceName ?? detectDevice(req.headers['user-agent']),
@@ -204,8 +222,8 @@ export class AuthService {
     const { accessToken, refreshToken } = await this.issueTokens(
       user.id,
       user.email,
-      user.isSuperuser,
-      user.isStaff,
+      org.id,
+      'admin',
       session.id,
     );
 
@@ -315,8 +333,8 @@ export class AuthService {
     const { accessToken } = await this.issueTokens(
       user.id,
       user.email,
-      user.isSuperuser,
-      user.isStaff,
+      user.organizationId ?? '',
+      user.role,
       session.id,
     );
 
@@ -376,6 +394,66 @@ export class AuthService {
     }));
   }
 
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    const user = await this.usersService.findByEmail(email.toLowerCase());
+
+    if (user) {
+      await this.passwordResetsRepository.deleteAllForUser(user.id);
+
+      const rawToken = randomBytes(32).toString('hex');
+      const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
+
+      await this.passwordResetsRepository.create({ userId: user.id, tokenHash, expiresAt });
+
+      const appUrl = this.configService.get<string>('APP_URL') ?? 'http://localhost:4200';
+      const resetLink = `${appUrl}/reset-password?token=${rawToken}`;
+
+      void this.tasksQueueService
+        .sendPasswordResetEmail(email, resetLink, user.firstName)
+        .catch((err: unknown) => {
+          this.logger.warn('Failed to enqueue password reset email', err);
+        });
+    }
+
+    return { message: 'If an account exists for this email, a reset link has been sent.' };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const reset = await this.passwordResetsRepository.findValidByTokenHash(tokenHash);
+
+    if (!reset) throw new BadRequestException('Invalid or expired reset token');
+
+    const newPasswordHash = await argon2.hash(newPassword, {
+      type: argon2.argon2id,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 4,
+    });
+
+    await Promise.all([
+      this.usersService.updatePassword(reset.userId, newPasswordHash),
+      this.passwordResetsRepository.markUsed(reset.id),
+      this.sessionsRepository.deactivateAllForUser(reset.userId),
+    ]);
+  }
+
+  private async resolveUniqueSlug(name: string): Promise<string> {
+    const base = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80);
+    let slug = base;
+    let attempt = 0;
+    while (await this.organizationsRepository.isSlugTaken(slug)) {
+      attempt++;
+      slug = `${base}-${attempt}`;
+    }
+    return slug;
+  }
+
   private hashOtpCode(code: string): string {
     return createHmac('sha256', this.otpSecret).update(code).digest('hex');
   }
@@ -383,12 +461,12 @@ export class AuthService {
   private async issueTokens(
     userId: string,
     email: string,
-    isSuperuser: boolean,
-    isStaff: boolean,
+    organizationId: string,
+    role: UserRole,
     sessionId: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessPayload: AccessTokenPayload = { sub: userId, email, isSuperuser, isStaff, sessionId };
-    const refreshPayload: RefreshTokenPayload = { sub: userId, sessionId, type: 'refresh' };
+    const accessPayload: AccessTokenPayload = { sub: userId, email, organizationId, role, sessionId };
+    const refreshPayload: RefreshTokenPayload = { sub: userId, sessionId, organizationId, type: 'refresh' };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(accessPayload, {

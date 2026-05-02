@@ -38,6 +38,9 @@
     },
     {
       "path": "./libs/backend/mail"
+    },
+    {
+      "path": "./libs/backend/storage"
     }
   ]
 }

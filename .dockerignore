@@ -5,4 +5,6 @@ apps/*/dist
 apps/*/node_modules
 .git
 .vscode
+monitoring
+docker-compose*.yml
 *.md

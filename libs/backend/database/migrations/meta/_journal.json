@@ -15,6 +15,27 @@
       "when": 1777636600176,
       "tag": "0001_massive_lily_hollister",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746230400000,
+      "tag": "0002_tenancy_roles_softdelete",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746316800000,
+      "tag": "0003_password_resets",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777739285746,
+      "tag": "0004_unique_moon_knight",
+      "breakpoints": true
     }
   ]
 }

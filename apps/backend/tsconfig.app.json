@@ -25,19 +25,22 @@
       "path": "../../libs/backend/users/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/backend/storage/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/shared/types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/queue/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/mail/tsconfig.lib.json"
     },
     {
       "path": "../../libs/backend/database/tsconfig.lib.json"
     },
     {
       "path": "../../libs/backend/auth/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/backend/mail/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/backend/queue/tsconfig.lib.json"
     }
   ],
 }

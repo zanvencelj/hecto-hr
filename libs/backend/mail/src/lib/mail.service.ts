@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { welcomeEmailHtml } from './templates/welcome.template';
 import { verificationCodeEmailHtml } from './templates/verification-code.template';
+import { passwordResetEmailHtml } from './templates/password-reset.template';
 
 @Injectable()
 export class MailService {
@@ -44,5 +45,15 @@ export class MailService {
       html: verificationCodeEmailHtml(code, firstName),
     });
     this.logger.log(`Verification email sent → ${email}`);
+  }
+
+  async sendPasswordResetEmail(email: string, resetLink: string, firstName: string | null): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.from,
+      to: email,
+      subject: 'Reset your HectoHR password',
+      html: passwordResetEmailHtml(resetLink, firstName),
+    });
+    this.logger.log(`Password reset email sent → ${email}`);
   }
 }

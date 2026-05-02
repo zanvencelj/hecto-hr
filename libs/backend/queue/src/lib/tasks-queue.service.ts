@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
-import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData } from './queue.constants';
+import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData, type SendPasswordResetEmailData } from './queue.constants';
 
 @Injectable()
 export class TasksQueueService {
@@ -22,5 +22,14 @@ export class TasksQueueService {
       backoff: { type: 'exponential', delay: 2000 },
     });
     this.logger.log(`Enqueued verification email → ${email}`);
+  }
+
+  async sendPasswordResetEmail(email: string, resetLink: string, firstName: string | null): Promise<void> {
+    const data: SendPasswordResetEmailData = { email, resetLink, firstName };
+    await this.queue.add(JOB_NAMES.SEND_PASSWORD_RESET_EMAIL, data, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+    });
+    this.logger.log(`Enqueued password reset email → ${email}`);
   }
 }

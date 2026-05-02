@@ -19,6 +19,7 @@ import type {
   SessionInfo,
   RegistrationInitiatedResponse,
   ResendCodeResponse,
+  ForgotPasswordResponse,
 } from '@hecto/shared-types';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
@@ -29,6 +30,8 @@ import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyEmailCodeDto } from './dto/verify-email-code.dto';
 import { ResendVerificationCodeDto } from './dto/resend-verification-code.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 @UseGuards(JwtAuthGuard)
@@ -110,6 +113,20 @@ export class AuthController {
   @Get('sessions')
   getSessions(@CurrentUser() user: AccessTokenPayload): Promise<SessionInfo[]> {
     return this.authService.getSessions(user.sub, user.sessionId);
+  }
+
+  @Public()
+  @Post('password-reset')
+  @HttpCode(HttpStatus.OK)
+  forgotPassword(@Body() dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('password-reset/confirm')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 
   @Delete('sessions/:sessionId')

@@ -2,7 +2,7 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { MailService } from '@hecto/mail';
-import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData } from '../queue.constants';
+import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData, type SendPasswordResetEmailData } from '../queue.constants';
 
 @Processor(TASKS_QUEUE, { concurrency: 5 })
 export class TasksProcessor extends WorkerHost {
@@ -22,6 +22,11 @@ export class TasksProcessor extends WorkerHost {
       case JOB_NAMES.SEND_VERIFICATION_EMAIL: {
         const data = job.data as SendVerificationEmailData;
         await this.mailService.sendVerificationEmail(data.email, data.code, data.firstName);
+        break;
+      }
+      case JOB_NAMES.SEND_PASSWORD_RESET_EMAIL: {
+        const data = job.data as SendPasswordResetEmailData;
+        await this.mailService.sendPasswordResetEmail(data.email, data.resetLink, data.firstName);
         break;
       }
       default:
