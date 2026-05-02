@@ -7,14 +7,22 @@ Complete list of all available tasks and commands.
 | Task | Command | Purpose |
 |------|---------|---------|
 | Start backend (dev) | `mise run dev` | Run with hot-reload (file changes auto-restart) |
+| Start frontend | `pnpm nx serve manager` | React app at `localhost:4200` (Vite HMR) |
+| Start worker (local) | `pnpm nx serve worker` | BullMQ email processor (auto-starts in Docker) |
 | Run tests | `mise run test` | All unit tests (all projects) |
 | Backend tests (watch) | `mise run test-backend` | Backend tests in watch mode |
 | Lint code | `mise run lint` | Run ESLint on all projects |
 | Type-check | `mise run typecheck` | TypeScript type checking |
 | Full check | `mise run check` | lint + typecheck + test (all) |
-| Build all | `mise run build` | Webpack build for backend |
-| Docker up | `mise run up` | Start Docker Compose containers |
+| Build all | `mise run build` | Production build (backend + worker bundles) |
+| Docker up | `mise run up` | Start all 5 services (Postgres, Redis, Mailhog, backend, worker) |
 | Docker down | `mise run down` | Stop Docker Compose containers |
+| Generate migration | `pnpm db:generate` | Create SQL migration from schema changes |
+| Apply migrations | `pnpm db:migrate` | Apply pending migrations to database |
+| Database UI | `pnpm db:studio` | Open Drizzle Studio visual browser |
+| Push schema (dev) | `pnpm db:push` | Push schema without migration file (dev only) |
+| Seed database | `mise run seed` | Insert sample users (password: `hecto123`) |
+| View emails | `open http://localhost:8025` | Mailhog web UI (captured dev emails) |
 
 ## Detailed Commands
 
@@ -274,7 +282,7 @@ pnpm nx run backend:build -- --analyze
 
 ### Docker
 
-#### `mise run up` — Start Docker Containers
+#### `mise run up` — Start All Services
 
 ```bash
 mise run up
@@ -286,14 +294,22 @@ docker compose up --build -d
 ```
 
 **What it does**:
-1. Builds Docker image (if not cached)
-2. Starts backend container
-3. Exposes port 3000
-4. Enables healthcheck
+Starts all five services in daemon mode:
+
+| Service | Port(s) | Purpose |
+|---------|---------|---------|
+| `postgres` | 5432 | Primary database |
+| `redis` | 6379 | BullMQ job queue broker |
+| `mailhog` | 1025 (SMTP), 8025 (UI) | Development email capture |
+| `backend` | 3000 | NestJS HTTP API |
+| `worker` | — | BullMQ email processor |
+
+The `backend` and `worker` wait for Postgres and Redis to be healthy before starting.
 
 **Access**:
 ```bash
-curl http://localhost:3000/api
+curl http://localhost:3000/api/health
+open http://localhost:8025   # Mailhog - view captured emails
 ```
 
 **Options**:
@@ -301,11 +317,11 @@ curl http://localhost:3000/api
 # Without detach (see logs in terminal)
 docker compose up --build
 
-# Use custom port
-BACKEND_PORT=3001 docker compose up
+# Restart only backend and worker after code change
+docker compose up -d --force-recreate backend worker
 
-# Force rebuild (don't use cache)
-docker compose up --build --force-recreate
+# Start only infrastructure (no backend/worker)
+docker compose up -d postgres redis mailhog
 ```
 
 #### `mise run down` — Stop Docker Containers
@@ -331,6 +347,94 @@ docker compose down --rmi all
 # Remove volumes (data cleanup)
 docker compose down -v
 ```
+
+### Frontend
+
+#### `pnpm nx serve manager` — Start React Frontend
+
+```bash
+pnpm nx serve manager
+```
+
+**What it does**:
+- Starts the Vite dev server
+- React app available at `http://localhost:4200`
+- Instant hot-module replacement (HMR) on file changes
+- Proxies `/api` requests to the backend at `localhost:3000`
+
+#### `pnpm nx serve worker` — Start BullMQ Worker (Local Dev)
+
+```bash
+pnpm nx serve worker
+```
+
+Starts the email job processor locally. Required for email delivery when not using Docker. The worker connects to Redis (`REDIS_HOST=localhost` by default in dev) and processes `send-verification-email` and `send-welcome-email` jobs.
+
+### Database
+
+#### `pnpm db:generate` — Generate a Migration
+
+```bash
+pnpm db:generate
+```
+
+**Equivalent to**: `pnpm drizzle-kit generate`
+
+**What it does**:
+- Compares the current Drizzle schema (`libs/backend/database/src/lib/schema/`) against the database
+- Creates a new SQL migration file in `libs/backend/database/migrations/`
+- Does not apply the migration — run `pnpm db:migrate` next
+
+**When to run**: After editing any schema file (adding columns, tables, indexes).
+
+#### `pnpm db:migrate` — Apply Migrations
+
+```bash
+pnpm db:migrate
+```
+
+**Equivalent to**: `pnpm drizzle-kit migrate`
+
+**What it does**:
+- Applies all pending SQL migrations to the database
+- Safe to re-run — already-applied migrations are skipped
+
+**When to run**: After `pnpm db:generate`, after pulling new migrations from git, and after resetting the database.
+
+#### `pnpm db:studio` — Browse the Database
+
+```bash
+pnpm db:studio
+```
+
+**Equivalent to**: `pnpm drizzle-kit studio`
+
+Opens Drizzle Studio at `https://local.drizzle.studio`. Provides a visual browser for all tables and rows. Supports filtering, editing, and running SQL queries.
+
+#### `pnpm db:push` — Push Schema (Dev Only)
+
+```bash
+pnpm db:push
+```
+
+**Equivalent to**: `pnpm drizzle-kit push`
+
+Pushes the schema directly to the database without generating migration files. Useful for rapid iteration during early development. **Never use in production** — changes won't be tracked or reproducible.
+
+### Seeding
+
+#### `mise run seed` — Seed Database
+
+```bash
+mise run seed
+```
+
+**What it does**:
+- Runs `apps/backend/src/seed/seed.service.ts`
+- Inserts sample users with password `hecto123`
+- Safe to re-run (uses upsert logic)
+
+**When to run**: After a fresh migration or database reset, to have sample accounts for manual testing.
 
 ### Advanced Nx Commands
 
@@ -488,22 +592,24 @@ docker push my-registry.com/hectohr:latest
 ### Daily Development Workflow
 
 ```bash
-# 1. Start backend with hot-reload
-mise run dev
-
-# 2. In another terminal, run backend tests in watch mode
-mise run test-backend
-
-# 3. In another terminal, start Docker containers (optional)
+# Terminal 1 — infrastructure (Postgres, Redis, Mailhog)
 mise run up
 
-# 4. Edit files and watch hot-reload + test results
-# (changes appear within ~200ms)
+# Terminal 2 — backend (hot-reload)
+mise run dev
 
-# 5. Before committing
+# Terminal 3 — frontend (Vite HMR)
+pnpm nx serve manager
+
+# Terminal 4 — optional: backend tests in watch mode
+mise run test-backend
+
+# Open http://localhost:4200 (frontend)
+# Open http://localhost:8025 (Mailhog — view verification emails)
+
+# Before committing
 mise run check
 
-# 6. If all pass, commit and push
 git add .
 git commit -m "feat: new feature"
 git push origin feature-branch

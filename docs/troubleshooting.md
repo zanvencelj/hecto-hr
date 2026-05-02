@@ -236,6 +236,138 @@ Linting failed; Prettier formatting differs
    pnpm nx lint backend -- --fix
    ```
 
+## Email & SMTP Issues
+
+### Worker sends emails to localhost instead of Mailhog
+
+**Problem**:
+```
+connect ECONNREFUSED 127.0.0.1:1025
+```
+Appears in `docker compose logs worker`.
+
+**Cause**: `SMTP_HOST=localhost` is set in `.env`. Inside the Docker network, `localhost` resolves to the container itself — not the Mailhog service.
+
+**Fix**: Remove or comment out `SMTP_HOST` from `.env`:
+```bash
+# SMTP_HOST=localhost   ← remove this line
+```
+
+Docker Compose sets `SMTP_HOST=mailhog` by default when the variable is unset. Restart the worker after changing `.env`:
+```bash
+docker compose up -d --force-recreate worker
+```
+
+### Emails not appearing in Mailhog
+
+**Problem**: Verification emails are not showing up at `http://localhost:8025`.
+
+**Checklist**:
+1. Is the worker running?
+   ```bash
+   docker compose ps       # check worker status
+   docker compose logs worker
+   ```
+2. Is Redis healthy (worker needs Redis to receive jobs)?
+   ```bash
+   docker compose ps redis
+   ```
+3. Is `SMTP_HOST` correctly set? (see above)
+4. If running without Docker, is the local worker process running?
+   ```bash
+   pnpm nx serve worker
+   ```
+
+### Verification code expired
+
+**Problem**: "Verification code has expired or not found" error on submit.
+
+Codes expire after **10 minutes**. Request a new code:
+- Click "Resend Code" on the verification screen (available after 30-second cooldown)
+- Or restart registration with the same email — a new verification record replaces the old one
+
+### Too many wrong verification attempts
+
+**Problem**: "Too many incorrect attempts. Please request a new code." error.
+
+After **5 wrong attempts**, the verification record is locked. The user must restart registration to get a fresh code.
+
+### Maximum resends reached
+
+**Problem**: "Maximum resend limit reached" error.
+
+Each verification session allows **3 resends**. After that, the user must restart registration (submit the email form again).
+
+### Resend cooldown active
+
+**Problem**: "Please wait X seconds before requesting another code" error.
+
+A **30-second cooldown** applies between resend requests. The frontend countdown timer shows when the next resend is available.
+
+## Database Issues
+
+### Migrations not applied
+
+**Problem**: Schema errors or "column does not exist" errors at startup.
+
+**Fix**:
+```bash
+pnpm db:migrate
+```
+
+### Schema drift warning
+
+**Problem**: `drizzle-kit` warns about differences between schema and database.
+
+**Fix**: Generate and apply a new migration:
+```bash
+pnpm db:generate   # creates a new SQL migration
+pnpm db:migrate    # applies it
+```
+
+### Database connection refused
+
+**Problem**: `ECONNREFUSED localhost:5432` when starting the backend locally.
+
+**Fix**: Ensure Postgres is running:
+```bash
+mise run up
+docker compose ps postgres   # should show "healthy"
+```
+
+### Reset the database
+
+```bash
+docker compose down -v   # WARNING: destroys all data
+mise run up
+pnpm db:migrate
+mise run seed            # optional: re-seed with sample users
+```
+
+## Redis Issues
+
+### Redis connection refused (local dev)
+
+**Problem**: `ECONNREFUSED 127.0.0.1:6379` when starting the backend or worker locally.
+
+**Fix**: Ensure Redis is running:
+```bash
+mise run up
+docker compose ps redis   # should show "healthy"
+```
+
+### BullMQ jobs not processing
+
+**Problem**: Registration emails queued but not sent.
+
+**Checklist**:
+1. Is the worker process running (locally: `pnpm nx serve worker`, Docker: check `docker compose ps worker`)?
+2. Is Redis healthy?
+3. Check worker logs for errors:
+   ```bash
+   docker compose logs -f worker
+   ```
+
 ## Docker Issues
 
 ### Container won't start

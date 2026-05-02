@@ -15,6 +15,21 @@
     "noUnusedLocals": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es2022"
+    "target": "es2022",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@hecto/shared-types": ["./libs/shared/types/src/index.ts"],
+      "@hecto/database": ["./libs/backend/database/src/index.ts"],
+      "@hecto/users": ["./libs/backend/users/src/index.ts"],
+      "@hecto/auth": ["./libs/backend/auth/src/index.ts"],
+      "@hecto/mail": ["./libs/backend/mail/src/index.ts"],
+      "@hecto/queue": ["./libs/backend/queue/src/index.ts"],
+      "@hecto/ui": ["./libs/shared/ui/src/index.ts"],
+      "@hecto/api-client": ["./libs/shared/api-client/src/index.ts"],
+      "@hecto/schemas": ["./libs/shared/schemas/src/index.ts"]
+    }
   }
 }

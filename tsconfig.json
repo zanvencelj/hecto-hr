@@ -5,6 +5,39 @@
   "references": [
     {
       "path": "./apps/backend"
+    },
+    {
+      "path": "./libs/shared/types"
+    },
+    {
+      "path": "./libs/backend/database"
+    },
+    {
+      "path": "./libs/backend/users"
+    },
+    {
+      "path": "./libs/backend/auth"
+    },
+    {
+      "path": "./apps/manager-e2e"
+    },
+    {
+      "path": "./apps/manager"
+    },
+    {
+      "path": "./libs/shared/ui"
+    },
+    {
+      "path": "./libs/shared/schemas"
+    },
+    {
+      "path": "./libs/shared/api-client"
+    },
+    {
+      "path": "./libs/backend/queue"
+    },
+    {
+      "path": "./libs/backend/mail"
     }
   ]
 }

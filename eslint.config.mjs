@@ -5,7 +5,15 @@ import prettierConfig from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/out-tsc/**', '**/test-output/**'],
+      "ignores": [
+        "**/dist/**",
+        "**/node_modules/**",
+        "**/out-tsc/**",
+        "**/test-output/**",
+        "**/vite.config.*.timestamp*",
+        "**/vitest.config.*.timestamp*",
+        "**/test-output"
+      ]
   },
   {
     files: ['**/*.ts'],

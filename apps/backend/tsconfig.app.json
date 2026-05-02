@@ -2,10 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "../../",
     "types": [
       "node"
     ],
-    "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -19,5 +19,25 @@
     "jest.config.cts",
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
-  ]
+  ],
+  "references": [
+    {
+      "path": "../../libs/backend/users/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/shared/types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/database/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/mail/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/queue/tsconfig.lib.json"
+    }
+  ],
 }

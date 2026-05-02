@@ -1,5 +1,5 @@
 {
-  "name": "@org/backend",
+  "name": "@hecto/backend",
   "version": "0.0.1",
   "private": true,
   "nx": {
@@ -56,26 +56,73 @@
         ],
         "executor": "nx:noop"
       },
+      "build-worker": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "webpack-cli build --config webpack.worker.config.js",
+          "args": [
+            "--node-env=production"
+          ],
+          "cwd": "apps/backend"
+        },
+        "configurations": {
+          "development": {
+            "args": [
+              "--node-env=development"
+            ]
+          }
+        }
+      },
       "serve": {
         "continuous": true,
         "executor": "nx:run-commands",
         "options": {
-          "command": "node --watch --require @swc-node/register ./src/main.ts",
+          "command": "node --require @swc-node/register --watch --watch-path=./src --watch-path=../../libs ./src/main.ts",
           "cwd": "apps/backend",
           "env": {
-            "NODE_ENV": "development",
-            "SWCRC": "true"
+            "NODE_ENV": "development"
+          }
+        }
+      },
+      "serve-worker": {
+        "continuous": true,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node --require @swc-node/register --watch --watch-path=./src --watch-path=../../libs ./src/worker.ts",
+          "cwd": "apps/backend",
+          "env": {
+            "NODE_ENV": "development"
           }
         }
       }
     }
   },
   "dependencies": {
+    "@hecto/auth": "workspace:*",
+    "@hecto/database": "workspace:*",
+    "@hecto/mail": "workspace:*",
+    "@hecto/queue": "workspace:*",
+    "@hecto/shared-types": "workspace:*",
+    "@hecto/users": "workspace:*",
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.0",
-    "reflect-metadata": "^0.1.13",
+    "argon2": "^0.44.0",
+    "bullmq": "^5.76.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "cookie-parser": "^1.4.7",
+    "drizzle-orm": "^0.45.2",
+    "nodemailer": "^8.0.7",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.0",
     "tslib": "^2.3.0"
   },

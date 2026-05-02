@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks you through setting up Hectohr for the first time and running the backend application.
+This guide walks you through setting up Hectohr for the first time and running the full application stack.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ This guide walks you through setting up Hectohr for the first time and running t
 - **Node.js**: Managed by mise (currently v22)
 - **pnpm**: Managed by mise (latest)
 - **Git**: For version control
-- **Docker & Docker Compose** (optional): For running containers locally
+- **Docker & Docker Compose**: Required for PostgreSQL, Redis, and Mailhog
 
 ### Install mise
 
@@ -19,14 +19,14 @@ Mise is a tool manager that handles Node.js, pnpm, and other tools at the projec
 curl https://mise.jdx.dev/install.sh | sh
 ```
 
-**Windows** (using Chocolatey):
-```bash
-choco install mise
-```
-
-**Or via Windows Package Manager**:
+**Windows** (using winget):
 ```bash
 winget install mise-en-place
+```
+
+**Or via Chocolatey**:
+```bash
+choco install mise
 ```
 
 For other installation methods, see [mise docs](https://mise.jdx.dev/getting-started.html).
@@ -58,10 +58,7 @@ eval "$(mise activate bash)"
 mise activate fish | source
 ```
 
-Add this to your shell rc file (`.zshrc`, `.bashrc`, etc.) for automatic activation:
-```bash
-eval "$(mise activate zsh)"
-```
+Add this to your shell rc file (`.zshrc`, `.bashrc`, etc.) for automatic activation on every terminal open.
 
 ### 3. Verify Tools
 
@@ -70,7 +67,7 @@ Confirm mise has installed the required tools:
 mise ls
 ```
 
-Expected output (Node v22, pnpm latest):
+Expected output:
 ```
 nodejs    22.x.x  (set in mise.toml)
 pnpm      10.x.x  (set in mise.toml)
@@ -82,15 +79,66 @@ pnpm      10.x.x  (set in mise.toml)
 pnpm install
 ```
 
-This installs:
-- Root workspace dependencies (ESLint, Jest, TypeScript, Nx)
-- Backend dependencies (NestJS, Express, RxJS, etc.)
+This installs all workspace dependencies for the backend, frontend, and all shared libraries.
+
+### 5. Configure Environment
+
+Copy the example environment file and set the required secrets:
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set at minimum:
+
+```bash
+# Generate these with: openssl rand -base64 32
+JWT_ACCESS_SECRET=<at-least-32-random-chars>
+JWT_REFRESH_SECRET=<at-least-32-random-chars>
+EMAIL_VERIFICATION_SECRET=<at-least-32-random-chars>
+```
+
+> **Important**: Do not set `SMTP_HOST` in `.env` when using Docker Compose — the compose file defaults it to the `mailhog` service. Only set it if running the backend directly without Docker (`SMTP_HOST=localhost`).
+
+### 6. Start Infrastructure
+
+Start PostgreSQL, Redis, and Mailhog via Docker Compose:
+
+```bash
+mise run up
+```
+
+This starts:
+- **PostgreSQL** on port 5432
+- **Redis** on port 6379
+- **Mailhog** SMTP on port 1025, web UI on port 8025
+
+Verify containers are running:
+```bash
+docker ps
+```
+
+### 7. Apply Database Migrations
+
+```bash
+pnpm db:migrate
+```
+
+This applies all pending SQL migrations in `libs/backend/database/migrations/`. Run this after every `pnpm db:generate`.
+
+### 8. (Optional) Seed the Database
+
+Populate the database with initial users for development:
+
+```bash
+mise run seed
+```
+
+Creates sample users with password `hecto123`.
 
 ## First Run
 
-### Development Mode (Hot-Reload)
-
-Start the backend with automatic file-change detection and fast restarts:
+### Start the Backend
 
 ```bash
 mise run dev
@@ -103,46 +151,49 @@ pnpm nx serve backend
 
 Expected output:
 ```
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [NestFactory] Starting Nest application...
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [InstanceLoader] ConfigHostModule dependencies initialized +5ms
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [InstanceLoader] AppModule dependencies initialized +0ms
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [RoutesResolver] AppController {/api}:
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [RouterExplorer] Mapped {/api, GET} route +1ms
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [RoutesResolver] HealthController {/api/health}:
-[Nest] 12345  - 04/24/2026, 8:00:00 PM    LOG   [NestApplication] Nest application successfully started +2ms
+[Nest] LOG [NestFactory] Starting Nest application...
+[Nest] LOG [InstanceLoader] DatabaseModule dependencies initialized
+[Nest] LOG [InstanceLoader] QueueModule dependencies initialized
+[Nest] LOG [InstanceLoader] AuthModule dependencies initialized
+[Nest] LOG [NestApplication] Nest application successfully started +2ms
+```
+
+The API is available at `http://localhost:3000/api`.
+
+### Start the Frontend
+
+In a separate terminal:
+
+```bash
+pnpm nx serve manager
+```
+
+The React app is available at `http://localhost:4200`.
+
+### (Optional) Start the Worker
+
+The worker processes background jobs (email sending). In Docker Compose it runs automatically. For local development without Docker, start it separately:
+
+```bash
+pnpm nx serve worker
 ```
 
 ### Test the API
 
-In another terminal, test the running backend:
-
 ```bash
-# Main endpoint
-curl http://localhost:3000/api
-
 # Health check
 curl http://localhost:3000/api/health
+# {"status":"ok"}
+
+# Initiate registration (sends a verification email)
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Test1234"}'
 ```
 
-Expected responses:
-```json
-{"message":"Hello API"}
-```
+### View Sent Emails
 
-```json
-{"status":"ok"}
-```
-
-### Hot-Reload in Action
-
-1. Edit `apps/backend/src/app/app.service.ts`
-2. Change the message (e.g., `message: 'Hello Hectohr'`)
-3. Save the file — observe the terminal:
-   ```
-   Restarting application on file changes...
-   [Nest] ... NestApplication successfully started
-   ```
-4. Test the API again — the new message appears within ~200–300ms
+During development, all emails are captured by Mailhog. Open `http://localhost:8025` to see the Mailhog inbox — verification codes and welcome emails appear here.
 
 ## Running Tests
 
@@ -170,128 +221,136 @@ mise run typecheck
 mise run check
 ```
 
-## Docker Setup
+## Database Workflow
 
-### Start Containers
+### Generate a Migration
 
-```bash
-mise run up
-```
-
-This starts the backend container (configured for production). Access it at `http://localhost:3000`.
-
-### Stop Containers
+After editing a schema file in `libs/backend/database/src/lib/schema/`:
 
 ```bash
-mise run down
+pnpm db:generate
 ```
 
-### Verify Container Health
+This creates a new SQL file in `libs/backend/database/migrations/`.
+
+### Apply Migrations
 
 ```bash
-docker ps
-docker logs hectohr-backend-1  # tail logs
+pnpm db:migrate
 ```
 
-The backend includes a healthcheck endpoint (`GET /api/health`). Docker polls it every 15 seconds—if unhealthy, the container restarts.
-
-## Development with Docker
-
-If you want to run development mode inside a container:
+### Browse the Database Visually
 
 ```bash
-# Build development image with pnpm
-docker build -f apps/backend/Dockerfile -t hectohr-backend:dev .
-
-# Run in development mode (with hot-reload volume)
-docker run -it \
-  -p 3000:3000 \
-  -e NODE_ENV=development \
-  -e SWCRC=true \
-  -v $(pwd)/apps/backend/src:/app/apps/backend/src \
-  hectohr-backend:dev \
-  node --watch --require @swc-node/register ./src/main.ts
+pnpm db:studio
 ```
+
+Opens Drizzle Studio at `https://local.drizzle.studio` — a visual database browser.
+
+### Push Schema Directly (Dev Only)
+
+```bash
+pnpm db:push
+```
+
+Pushes schema changes directly without creating migration files. Useful for rapid iteration during development; **do not use in production**.
 
 ## Environment Configuration
 
-### .env File
-
-Create `.env` in the root directory (or copy from `.env.example`):
+### Full `.env` Reference
 
 ```bash
-cp .env.example .env
-```
-
-Example `.env`:
-```
+# App
 NODE_ENV=development
 PORT=3000
-BACKEND_PORT=3000
+
+# Database
+DATABASE_URL=postgresql://hectohr:secret@localhost:5432/hectohr
+
+# JWT (min 32 chars each)
+JWT_ACCESS_SECRET=change-me-access-secret-at-least-32-chars
+JWT_REFRESH_SECRET=change-me-refresh-secret-at-least-32-chars
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=7d
+
+# Email verification OTP (min 32 chars)
+EMAIL_VERIFICATION_SECRET=change-me-otp-secret-at-least-32-chars
+
+# CORS
+CORS_ORIGINS=http://localhost:4200
+
+# Redis
+REDIS_HOST=localhost   # set only for local dev without Docker
+REDIS_PORT=6379
+
+# SMTP
+# Do NOT set SMTP_HOST here when using Docker Compose (defaults to 'mailhog')
+SMTP_PORT=1025
+SMTP_FROM=noreply@hectohr.io
 ```
 
-The backend loads `.env` via `@nestjs/config`:
+### Add a New Environment Variable
 
-```typescript
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-  ],
-})
-```
+1. Add to `.env` and `.env.example`
+2. Use in code via `ConfigService`:
+   ```typescript
+   constructor(private config: ConfigService) {}
+
+   get value() {
+     return this.config.getOrThrow('MY_VAR');
+   }
+   ```
+3. Add to `docker-compose.yml` for the relevant services
 
 ## Troubleshooting
 
 ### Port 3000 Already in Use
 
-If you see `EADDRINUSE: address already in use :::3000`:
-
 ```bash
-# Kill the process using port 3000
 lsof -ti:3000 | xargs kill -9   # macOS/Linux
 netstat -ano | findstr :3000    # Windows (then taskkill /PID <pid> /F)
-
-# Or start backend on a different port
-PORT=3001 pnpm nx serve backend
 ```
 
-### Dependencies Not Installed
+### Emails Not Arriving in Mailhog
 
-If you see `Cannot find module '@nestjs/common'`:
+Check that `SMTP_HOST` is **not** set in `.env` (Docker Compose sets it automatically to `mailhog`). If it's set to `localhost`, the worker container can't reach Mailhog.
+
+If running the backend locally without Docker, set `SMTP_HOST=localhost`.
+
+### Database Connection Refused
+
+Ensure Docker containers are running:
+```bash
+mise run up
+docker ps  # postgres should appear
+```
+
+If using the local backend without Docker Compose, make sure PostgreSQL is running and `DATABASE_URL` points to it.
+
+### Migrations Not Applied
+
+```bash
+pnpm db:migrate
+```
+
+If you see schema drift warnings, run `pnpm db:generate` first to create a new migration, then `pnpm db:migrate`.
+
+### Dependencies Not Installed
 
 ```bash
 pnpm install
 ```
 
 If that doesn't work, try a clean reinstall:
-
 ```bash
-rm -rf node_modules apps/*/node_modules
+rm -rf node_modules apps/*/node_modules libs/*/node_modules
 pnpm install
 ```
 
 ### TypeScript Errors in IDE
 
-If your IDE shows TypeScript errors:
-
-1. Verify TypeScript is installed: `pnpm ls typescript`
-2. Restart your IDE's TypeScript language server (Ctrl+Shift+P → "TypeScript: Restart TS Server")
-3. Check `tsconfig.base.json` and `apps/backend/tsconfig.json` are valid JSON
-
-### Module Not Found During Build
-
-If `npm exec nx build backend` fails with missing modules:
-
-```bash
-# Ensure all peer dependencies are installed
-pnpm install
-
-# Then rebuild
-pnpm nx build backend
-```
+1. Run `pnpm nx sync` to update project references
+2. Restart the TypeScript language server (Ctrl+Shift+P → "TypeScript: Restart TS Server" in VS Code)
 
 ## Next Steps
 
@@ -302,8 +361,6 @@ pnpm nx build backend
 
 ## IDE Extensions (Recommended)
 
-Set up your IDE for optimal experience:
-
 - **VS Code**: Install extensions from `.vscode/extensions.json`:
   - Nx Console (execute Nx targets visually)
   - ESLint (real-time linting)
@@ -311,7 +368,7 @@ Set up your IDE for optimal experience:
   - Docker (Docker support)
   - Jest Runner (run/debug tests)
 
-- **JetBrains IDEs** (IntelliJ, WebStorm, etc.):
+- **JetBrains IDEs** (IntelliJ, WebStorm):
   - Install Nx Console plugin from marketplace
   - Built-in TypeScript, ESLint, Jest support
 
@@ -320,10 +377,14 @@ Set up your IDE for optimal experience:
 | What | Command |
 |------|---------|
 | Start backend (dev) | `mise run dev` |
+| Start frontend | `pnpm nx serve manager` |
+| Start infrastructure | `mise run up` |
+| Apply migrations | `pnpm db:migrate` |
+| Seed database | `mise run seed` |
+| View emails | `http://localhost:8025` |
 | Run tests | `mise run test` |
 | Lint code | `mise run lint` |
 | Type-check | `mise run typecheck` |
 | Full check | `mise run check` |
-| Start Docker | `mise run up` |
 | Stop Docker | `mise run down` |
 | Build for production | `mise run build` |

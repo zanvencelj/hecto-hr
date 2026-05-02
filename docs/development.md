@@ -6,7 +6,12 @@ This guide covers daily development workflows, hot-reload mechanics, debugging, 
 
 ### Starting Development
 
-**Terminal 1 - Backend (auto-restart on file changes)**:
+**Terminal 1 - Infrastructure (Postgres, Redis, Mailhog)**:
+```bash
+mise run up
+```
+
+**Terminal 2 - Backend (auto-restart on file changes)**:
 ```bash
 mise run dev
 ```
@@ -21,14 +26,25 @@ This starts the backend with:
 - `@swc-node/register` (transpiles TypeScript on-the-fly)
 - `SWCRC=true` (enables decorator support in SWC)
 
-**Terminal 2 - Optional: Run tests in watch mode**:
+**Terminal 3 - Frontend**:
 ```bash
-mise run test-backend
+pnpm nx serve manager
 ```
 
-**Terminal 3 - Optional: Docker containers**:
+The React app is available at `http://localhost:4200`. Vite provides instant hot-module replacement (HMR) — UI changes appear in the browser without a full reload.
+
+**Terminal 4 - Worker (background job processor)**:
+
+In Docker Compose the worker starts automatically alongside the backend. For local development without Docker, start it in a separate terminal:
 ```bash
-mise run up
+pnpm nx serve worker
+```
+
+The worker connects to Redis and processes BullMQ jobs (email sending). Without the worker running, registration emails won't be delivered.
+
+**Terminal 5 - Optional: Backend tests in watch mode**:
+```bash
+mise run test-backend
 ```
 
 ### Making Changes
@@ -109,24 +125,102 @@ If a change doesn't hot-reload automatically, restart manually:
 mise run dev
 ```
 
+## Viewing Emails in Development
+
+All emails sent by the backend or worker are captured by Mailhog. Open the web UI to inspect them:
+
+```
+http://localhost:8025
+```
+
+This includes:
+- **Registration verification codes** — the 6-digit OTP sent when a user registers
+- **Welcome emails** — sent after a verified account is created
+
+> **SMTP_HOST in Docker**: Never set `SMTP_HOST=localhost` in `.env`. Inside the Docker network, `localhost` is the container itself, not Mailhog. The `docker-compose.yml` defaults `SMTP_HOST` to `mailhog` automatically. Only set `SMTP_HOST=localhost` if running the backend locally without Docker.
+
+## Database Workflow
+
+### Generate a Migration
+
+After editing a schema file in `libs/backend/database/src/lib/schema/`:
+
+```bash
+pnpm db:generate
+```
+
+This creates a new timestamped SQL file in `libs/backend/database/migrations/`. Review it before applying.
+
+### Apply Migrations
+
+```bash
+pnpm db:migrate
+```
+
+Run this after `pnpm db:generate` and every time you pull changes that include new migrations.
+
+### Browse the Database Visually
+
+```bash
+pnpm db:studio
+```
+
+Opens Drizzle Studio at `https://local.drizzle.studio`. Shows all tables, rows, and lets you run queries interactively.
+
+### Push Schema Directly (Dev Only)
+
+```bash
+pnpm db:push
+```
+
+Pushes schema changes directly to the database without creating migration files. Useful for fast iteration during early development. **Do not use in production** — changes won't be tracked or reproducible.
+
+### Seed the Database
+
+```bash
+mise run seed
+```
+
+Inserts sample users with password `hecto123`. Run this after a fresh migration or after resetting the database.
+
 ## File Structure for Development
 
 ```
-apps/backend/
-├── src/
-│   ├── main.ts                    # Bootstrap (rarely changes)
-│   └── app/
-│       ├── app.module.ts          # Root module (DI setup)
-│       ├── app.controller.ts      # HTTP endpoints
-│       ├── app.service.ts         # Business logic
-│       ├── app.service.spec.ts    # Unit tests
-│       ├── health.controller.ts   # Health endpoint (for Docker healthcheck)
-│       └── ...                    # Add more modules here
-├── Dockerfile                     # Production build
-├── .swcrc                         # SWC config (decorators, CommonJS)
-├── tsconfig.app.json              # App TypeScript config
-├── tsconfig.spec.json             # Test TypeScript config
-└── jest.config.ts                 # Jest config
+apps/
+├── backend/
+│   ├── src/
+│   │   ├── main.ts                    # HTTP server bootstrap
+│   │   ├── worker.ts                  # BullMQ worker bootstrap
+│   │   ├── seed/                      # Database seeding
+│   │   └── app/
+│   │       ├── app.module.ts          # Root module (imports all libs)
+│   │       ├── app.controller.ts      # Root HTTP endpoints
+│   │       └── health.controller.ts   # /api/health (used by Docker healthcheck)
+│   ├── Dockerfile                     # Multi-stage build (backend + worker)
+│   ├── .swcrc                         # SWC config (decorators, CommonJS)
+│   └── jest.config.ts                 # Jest config
+└── manager/
+    └── src/
+        ├── main.tsx                   # React entry point
+        ├── router/
+        │   └── routes/
+        │       └── auth/
+        │           ├── login.route.tsx
+        │           └── register.route.tsx  # Two-step registration + OTP
+        └── stores/                    # Zustand state
+
+libs/
+├── backend/
+│   ├── auth/                          # JWT, sessions, email verification OTP
+│   ├── database/                      # Drizzle ORM schema + migrations
+│   ├── mail/                          # Nodemailer templates
+│   ├── queue/                         # BullMQ job definitions + processor
+│   └── users/                         # User CRUD, argon2id hashing
+└── shared/
+    ├── api-client/                    # Axios + auth interceptors (silent refresh)
+    ├── schemas/                       # Zod validation schemas
+    ├── types/                         # Shared TypeScript types
+    └── ui/                            # React component library (Tailwind)
 ```
 
 ### Creating New Endpoints
@@ -525,6 +619,17 @@ pnpm nx test backend --watch
 ### Type errors in IDE but tests pass
 
 Restart your IDE's TypeScript language server (Ctrl+Shift+P → "TypeScript: Restart TS Server").
+
+## Email Verification Flow (Dev)
+
+When a user submits the registration form:
+
+1. `POST /api/auth/register` — backend stores pending data + sends verification email job to Redis
+2. Worker picks up the job and sends the email via Mailhog (SMTP port 1025)
+3. Open `http://localhost:8025` to see the email with the 6-digit code
+4. Enter the code in the frontend — on success, the account is created and the user is logged in
+
+To test resend behavior: wait 30 seconds on the verification screen and click "Resend Code". A new code appears in Mailhog. The previous code is invalidated.
 
 ## Next Steps
 

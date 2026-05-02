@@ -37,3 +37,9 @@ run = "pnpm nx run-many -t typecheck"
 [tasks.check]
 description = "Run lint + typecheck + tests"
 run = "pnpm nx run-many -t lint typecheck test"
+
+# ---- Database ----
+
+[tasks.seed]
+description = "Seed the database with initial users (password: hecto123)"
+run = "pnpm run seed"
