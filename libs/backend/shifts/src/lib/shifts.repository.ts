@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, between, eq, gt, inArray } from 'drizzle-orm';
+import { and, between, eq, gte, inArray } from 'drizzle-orm';
 import {
   DATABASE_CONNECTION,
   type Database,
@@ -161,7 +161,7 @@ export class ShiftsRepository {
     fromDate?: string,
   ): Promise<void> {
     const conditions = [eq(shifts.userId, userId), eq(shifts.organizationId, organizationId)];
-    if (fromDate) conditions.push(gt(shifts.date, fromDate));
+    if (fromDate) conditions.push(gte(shifts.date, fromDate));
     await this.db.delete(shifts).where(and(...conditions));
   }
 }

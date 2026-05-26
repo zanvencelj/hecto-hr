@@ -383,7 +383,7 @@ function BalancesTab() {
 
   function saveEdit() {
     if (!editing) return;
-    const days = parseFloat(editValue);
+    const days = editValue === '' ? 0 : parseFloat(editValue);
     if (isNaN(days) || days < 0) return;
     setBalance.mutate({ userId: editing.userId, leaveTypeId: editing.leaveTypeId, totalDays: days });
   }

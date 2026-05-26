@@ -1,6 +1,6 @@
 import { createRoute, redirect } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { rootRoute } from '../root.route';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api';
@@ -115,14 +115,11 @@ function ScheduleManagerPage() {
   }
 
   const days = useMemo(() => {
-    const result: string[] = [];
-    const start = new Date(from);
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      result.push(d.toISOString().split('T')[0]!);
-    }
-    return result;
+    const [y, m, d] = from.split('-').map(Number);
+    return Array.from({ length: 7 }, (_, i) => {
+      const dt = new Date(Date.UTC(y!, m! - 1, d! + i));
+      return dt.toISOString().split('T')[0]!;
+    });
   }, [from]);
 
   const shiftsByEmployee = useMemo(() => {
@@ -177,11 +174,11 @@ function ScheduleManagerPage() {
     mutationFn: async () => {
       if (!shifts?.length) return;
       const nextWeekShifts = shifts.map((s) => {
-        const d = new Date(s.date);
-        d.setDate(d.getDate() + 7);
+        const [sy, sm, sd] = s.date.split('-').map(Number);
+        const dt = new Date(Date.UTC(sy!, sm! - 1, sd! + 7));
         return {
           userId: s.userId,
-          date: d.toISOString().split('T')[0],
+          date: dt.toISOString().split('T')[0],
           startTime: s.startTime,
           endTime: s.endTime,
           notes: s.notes ?? undefined,
@@ -251,7 +248,7 @@ function ScheduleManagerPage() {
                         d === todayStr ? 'bg-blue-50 text-blue-700' : 'text-gray-600'
                       }`}
                     >
-                      {(() => { const dt = new Date(d); return `${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()]} ${String(dt.getDate()).padStart(2,'0')}`; })()}
+                      {(() => { const [,,dd] = d.split('-'); const dt = new Date(`${d}T00:00:00Z`); return `${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getUTCDay()]} ${dd}`; })()}
                       {d === todayStr && (
                         <span className="ml-1 text-[10px] font-semibold text-blue-500">TODAY</span>
                       )}
@@ -449,19 +446,6 @@ type ConfirmState = 'idle' | 'future' | 'all';
 function EmployeeMenu({ employeeId, onDeleted, onError }: EmployeeMenuProps) {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>('idle');
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-        setConfirm('idle');
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
 
   const bulkDelete = useMutation({
     mutationFn: (future: boolean) =>
@@ -479,7 +463,7 @@ function EmployeeMenu({ employeeId, onDeleted, onError }: EmployeeMenuProps) {
   });
 
   return (
-    <div ref={ref} className="relative flex-shrink-0">
+    <div className="relative flex-shrink-0">
       <button
         onClick={() => { setOpen((v) => !v); setConfirm('idle'); }}
         className="flex h-5 w-5 items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
@@ -488,7 +472,12 @@ function EmployeeMenu({ employeeId, onDeleted, onError }: EmployeeMenuProps) {
         ⋯
       </button>
       {open && (
-        <div className="absolute right-0 top-6 z-20 w-52 border border-gray-200 bg-white shadow-lg text-sm">
+        <>
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => { setOpen(false); setConfirm('idle'); }}
+          />
+          <div className="absolute right-0 top-6 z-20 w-52 border border-gray-200 bg-white shadow-lg text-sm">
           {confirm === 'idle' ? (
             <>
               <button
@@ -529,6 +518,7 @@ function EmployeeMenu({ employeeId, onDeleted, onError }: EmployeeMenuProps) {
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );

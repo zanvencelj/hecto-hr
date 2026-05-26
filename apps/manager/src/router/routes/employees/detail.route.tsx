@@ -235,7 +235,7 @@ function EmployeeDetailPage() {
                 <InfoRow label="Position" value={employee.position} />
                 <InfoRow label="Department" value={employee.department} />
                 <InfoRow label="Phone" value={employee.phone} />
-                <InfoRow label="Hire date" value={employee.hireDate} />
+                <InfoRow label="Hire date" value={fmtDate(employee.hireDate)} />
                 <InfoRow label="Date joined" value={fmtDate(employee.dateJoined)} />
                 <InfoRow
                   label="Last login"

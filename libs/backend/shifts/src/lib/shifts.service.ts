@@ -62,7 +62,7 @@ export class ShiftsService {
     const shiftInstances = [];
     let current = startDate;
     while (current <= endDate) {
-      if (dto.recurringDays!.includes(getDayOfWeek(current))) {
+      if (dto.recurringDays!.includes(getDayOfWeek(current)) && current !== dto.date) {
         shiftInstances.push({
           userId: dto.userId,
           organizationId: currentUser.organizationId,

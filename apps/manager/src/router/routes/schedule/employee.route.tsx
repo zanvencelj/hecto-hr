@@ -76,14 +76,11 @@ function ScheduleEmployeePage() {
   }
 
   const days = useMemo(() => {
-    const result: string[] = [];
-    const start = new Date(from);
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      result.push(d.toISOString().split('T')[0]!);
-    }
-    return result;
+    const [y, m, d] = from.split('-').map(Number);
+    return Array.from({ length: 7 }, (_, i) => {
+      const dt = new Date(Date.UTC(y!, m! - 1, d! + i));
+      return dt.toISOString().split('T')[0]!;
+    });
   }, [from]);
 
   const shiftsByDay = useMemo(() => {

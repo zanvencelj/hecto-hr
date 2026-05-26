@@ -63,6 +63,7 @@ export class SeedService {
     const existing = (await this.db
       .select()
       .from(organizations)
+      .where(eq(organizations.slug, DEV_ORG_SLUG))
       .limit(1)) as Array<{ id: string }>;
 
     if (existing[0]) {
@@ -81,8 +82,9 @@ export class SeedService {
 
   private async seedLeaveTypes(organizationId: string): Promise<void> {
     const defaults = [
-      { name: 'Sick Leave', code: 'SICK', color: '#ef4444', defaultDaysPerYear: 10, isPaid: true },
-      { name: 'Holiday Leave', code: 'HOLIDAY', color: '#6366f1', defaultDaysPerYear: 20, isPaid: true },
+      { name: 'Annual Leave', code: 'annual', color: '#6366f1', defaultDaysPerYear: 20, isPaid: true },
+      { name: 'Sick Leave', code: 'sick', color: '#f59e0b', defaultDaysPerYear: 10, isPaid: true },
+      { name: 'Unpaid Leave', code: 'unpaid', color: '#6b7280', defaultDaysPerYear: 0, isPaid: false },
     ];
 
     const existing = await this.db

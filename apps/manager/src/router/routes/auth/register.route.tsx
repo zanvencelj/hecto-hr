@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -97,13 +97,10 @@ function RegisterPage() {
   const { setAuth } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleSuccess = useCallback(
-    (user: LoginResponse['user'], accessToken: string) => {
-      setAuth(user, accessToken);
-      navigate({ to: '/' });
-    },
-    [setAuth, navigate],
-  );
+  function handleSuccess(user: LoginResponse['user'], accessToken: string) {
+    setAuth(user, accessToken);
+    navigate({ to: '/' });
+  }
 
   return (
     <div className="w-full max-w-sm space-y-6">
@@ -389,6 +386,7 @@ function VerificationStep({
   const resendCooldown = useCountdown(pending.nextResendAvailableAt);
   const canResend = resendCooldown === 0 && pending.resentCount < 3;
   const maxResendsReached = pending.resentCount >= 3;
+  const [otpKey, setOtpKey] = useState(0);
 
   const { mutate: verify, isPending: isVerifying } = useMutation({
     mutationFn: (submittedCode: string) =>
@@ -402,6 +400,7 @@ function VerificationStep({
     onError: (err) => {
       setCodeError(getApiError(err));
       setCode('');
+      setOtpKey((k) => k + 1);
     },
   });
 
@@ -416,23 +415,18 @@ function VerificationStep({
       onResent(data);
       setCodeError(null);
       setCode('');
+      setOtpKey((k) => k + 1);
     },
     onError: (err) => setCodeError(getApiError(err)),
   });
 
-  const submitCode = useCallback(
-    (value: string) => {
-      if (value.length === 6 && !isVerifying) {
-        setCodeError(null);
-        verify(value);
-      }
-    },
-    [isVerifying, verify],
-  );
-
-  useEffect(() => {
-    if (code.length === 6) submitCode(code);
-  }, [code, submitCode]);
+  function handleCodeChange(value: string) {
+    setCode(value);
+    if (value.length === 6 && !isVerifying) {
+      setCodeError(null);
+      verify(value);
+    }
+  }
 
   return (
     <>
@@ -462,8 +456,9 @@ function VerificationStep({
 
       <div className="space-y-4">
         <OtpInput
+          key={otpKey}
           value={code}
-          onChange={setCode}
+          onChange={handleCodeChange}
           disabled={isVerifying}
           hasError={!!codeError}
         />
@@ -550,16 +545,6 @@ function OtpInput({
 }) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (value === '') {
-      inputRefs.current[0]?.focus();
-    }
-  }, [value]);
-
   const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? '');
 
   function handleChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
@@ -610,6 +595,7 @@ function OtpInput({
             maxLength={1}
             value={digit}
             disabled={disabled}
+            autoFocus={i === 0}
             autoComplete="one-time-code"
             onChange={(e) => handleChange(i, e)}
             onKeyDown={(e) => handleKeyDown(i, e)}
