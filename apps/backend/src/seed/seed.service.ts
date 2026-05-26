@@ -88,7 +88,6 @@ export class SeedService {
     const existing = await this.db
       .select()
       .from(leaveTypes)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       .where(eq(leaveTypes.organizationId, organizationId)) as LeaveType[];
 
     const existingCodes = new Set((existing as Array<{ code: string }>).map((r) => r.code));
