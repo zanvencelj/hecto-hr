@@ -1,6 +1,6 @@
 # Hectohr Documentation
 
-Welcome to Hectohr, a full-stack HR management monorepo built with Nx. It features a NestJS backend with JWT authentication, email verification, async job queuing, a React frontend, and full Docker Compose support.
+Hectohr is a full-stack HR management system built as an Nx monorepo. It provides employee management, shift scheduling, and leave tracking with a role-based permission model.
 
 ## Quick Start
 
@@ -34,6 +34,9 @@ mise run up
 # Apply database migrations
 pnpm db:migrate
 
+# Seed demo users and default leave types
+mise run seed
+
 # Start backend with hot-reload (separate terminal)
 mise run dev
 
@@ -57,7 +60,7 @@ pnpm nx serve manager
 | **Generate migration** | `pnpm db:generate` | Create SQL migration from schema changes |
 | **Apply migrations** | `pnpm db:migrate` | Apply pending migrations to database |
 | **Database UI** | `pnpm db:studio` | Open Drizzle Studio (visual DB browser) |
-| **Seed database** | `mise run seed` | Seed with initial users |
+| **Seed database** | `mise run seed` | Seed demo users + default leave types |
 | **View emails (dev)** | Open `http://localhost:8025` | Mailhog web UI |
 
 ## Documentation Structure
@@ -71,15 +74,44 @@ pnpm nx serve manager
 
 ## Key Features
 
-✅ **Full-Stack Monorepo** — NestJS backend + React frontend in a single Nx workspace  
-✅ **Email Verification** — 2-step registration with 6-digit OTP, resend limits, expiry  
-✅ **Async Job Queue** — BullMQ + Redis for background email delivery  
-✅ **Session-Based Auth** — Stateful JWT with per-device session management  
-✅ **Cross-Platform** — Works identically on macOS, Linux, Windows  
-✅ **Zero Global Dependencies** — mise manages all tools (Node, pnpm)  
-✅ **Fast Hot-Reload** — ~150–300ms restarts with `@swc-node/register`  
-✅ **Type-Safe** — TypeScript with strict mode across frontend and backend  
-✅ **Docker-First** — Multi-service Compose with healthchecks for all services  
+**Authentication**
+- 2-step registration with 6-digit OTP email verification
+- Stateful JWT with per-device session management (list, revoke, revoke-all)
+- Argon2id password hashing
+
+**Employee Management**
+- CRUD with roles: `admin`, `hr`, `manager`, `employee`
+- Employee profiles (position, department, phone, hire date, notes)
+- Invitation system — managers/HR invite new employees via email
+- Soft deactivation (preserves history)
+
+**Schedule Management**
+- Weekly calendar view with per-employee shift rows
+- Create, edit, and delete individual shifts
+- Recurring shifts (repeat on selected weekdays, optional end date)
+- Bulk delete: all future shifts or all shifts for an employee
+- Copy current week's shifts to next week
+- Color-coded chips (gray < 6h, indigo 6–9h, amber > 9h) and weekly total hours
+- Employee filter
+
+**Leave Management**
+- Configurable leave types per organisation (name, code, color, annual quota, paid/unpaid)
+- Default types seeded on setup: **Sick Leave** (10 d) and **Holiday Leave** (20 d)
+- Per-employee leave balances per year (quota or unlimited)
+- Employee request flow: submit → manager approves/rejects/cancels
+- Balance tracking: used days, pending days, remaining
+- Manager can edit actual days taken on any request (corrects non-working days); tracked with `isEdited` + audit fields
+- Manager grid view: all employees × leave types, click to set quota
+
+**RBAC**
+- `RolesGuard` + `@Roles()` decorator on all manager/HR/admin endpoints
+- Frontend route guards redirect employees away from manager pages
+
+**Infrastructure**
+- Async email delivery via BullMQ + Redis (Mailhog in dev)
+- Structured request logging (pino-http)
+- Drizzle ORM schema-first migrations
+- Nx task caching and incremental builds
 
 ## Project Overview
 
@@ -96,8 +128,11 @@ hectohr/
 │   ├── backend/
 │   │   ├── auth/             # @hecto/auth — JWT, sessions, email verification
 │   │   ├── database/         # @hecto/database — Drizzle ORM + migrations
+│   │   ├── employees/        # @hecto/employees — employee CRUD + profiles
+│   │   ├── leave/            # @hecto/leave — leave types, balances, requests
 │   │   ├── mail/             # @hecto/mail — Nodemailer + email templates
 │   │   ├── queue/            # @hecto/queue — BullMQ jobs + processors
+│   │   ├── shifts/           # @hecto/shifts — shifts + recurring shifts
 │   │   └── users/            # @hecto/users — user CRUD, argon2id
 │   └── shared/
 │       ├── api-client/       # @hecto/api-client — Axios client + auth interceptors
@@ -111,6 +146,11 @@ hectohr/
 └── pnpm-workspace.yaml       # pnpm monorepo setup
 ```
 
-## Support
+## Demo Accounts (after seed)
 
-For detailed guides, see the documentation files listed above. For issues specific to this project, check [Troubleshooting](./troubleshooting.md).
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@hecto.dev` | `hecto123` | admin |
+| `hr@hecto.dev` | `hecto123` | hr |
+| `manager@hecto.dev` | `hecto123` | manager |
+| `employee@hecto.dev` | `hecto123` | employee |

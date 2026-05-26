@@ -9,6 +9,9 @@ import { UsersModule } from '@hecto/users';
 import { AuthModule } from '@hecto/auth';
 import { QueueModule } from '@hecto/queue';
 import { StorageModule } from '@hecto/storage';
+import { EmployeesModule } from '@hecto/employees';
+import { ShiftsModule } from '@hecto/shifts';
+import { LeaveModule } from '@hecto/leave';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
@@ -33,6 +36,9 @@ import { validateEnv } from '../env.validation';
     UsersModule,
     QueueModule,
     AuthModule,
+    EmployeesModule,
+    ShiftsModule,
+    LeaveModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

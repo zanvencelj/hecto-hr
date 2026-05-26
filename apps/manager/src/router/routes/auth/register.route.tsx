@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { authLayoutRoute } from './layout.route';
 import { Button, FormField, Input, PasswordInput, Alert } from '@hecto/ui';
-import { registerSchema } from '@hecto/schemas';
-import type { RegisterInput, RegisterFormInput } from '@hecto/schemas';
+import { registerSchema, companySchema } from '@hecto/schemas';
+import type { RegisterInput, RegisterFormInput, CompanyInput } from '@hecto/schemas';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api';
 import { getApiError } from '@hecto/api-client';
@@ -22,6 +22,8 @@ export const registerRoute = createRoute({
   component: RegisterPage,
 });
 
+type RegistrationStep = 'company' | 'personal' | 'verification';
+
 interface PendingVerification {
   maskedEmail: string;
   rawEmail: string;
@@ -30,63 +32,205 @@ interface PendingVerification {
   nextResendAvailableAt: string | null;
 }
 
+function StepIndicator({ current }: { current: RegistrationStep }) {
+  const steps: { key: RegistrationStep; label: string }[] = [
+    { key: 'company', label: 'Company' },
+    { key: 'personal', label: 'Account' },
+    { key: 'verification', label: 'Verify' },
+  ];
+  const currentIndex = steps.findIndex((s) => s.key === current);
+
+  return (
+    <div className="flex items-center justify-center gap-0">
+      {steps.map((step, i) => {
+        const isDone = i < currentIndex;
+        const isActive = i === currentIndex;
+        return (
+          <div key={step.key} className="flex items-center">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={[
+                  'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors',
+                  isDone
+                    ? 'bg-blue-600 text-white'
+                    : isActive
+                      ? 'border-2 border-blue-600 bg-white text-blue-600'
+                      : 'border-2 border-gray-200 bg-white text-gray-400',
+                ].join(' ')}
+              >
+                {isDone ? (
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span
+                className={[
+                  'text-xs',
+                  isActive ? 'font-medium text-blue-600' : isDone ? 'text-gray-500' : 'text-gray-400',
+                ].join(' ')}
+              >
+                {step.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className={[
+                  'mb-4 h-px w-12',
+                  isDone ? 'bg-blue-600' : 'bg-gray-200',
+                ].join(' ')}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function RegisterPage() {
+  const [step, setStep] = useState<RegistrationStep>('company');
+  const [organizationName, setOrganizationName] = useState('');
   const [pending, setPending] = useState<PendingVerification | null>(null);
   const { setAuth } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleSuccess = useCallback(
-    (user: LoginResponse['user'], accessToken: string) => {
-      setAuth(user, accessToken);
-      navigate({ to: '/' });
-    },
-    [setAuth, navigate],
-  );
-
-  if (pending) {
-    return (
-      <VerificationStep
-        pending={pending}
-        onResent={(updated) =>
-          setPending((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  resentCount: updated.resentCount,
-                  nextResendAvailableAt: updated.nextResendAvailableAt,
-                }
-              : prev,
-          )
-        }
-        onSuccess={handleSuccess}
-        onBack={() => setPending(null)}
-      />
-    );
+  function handleSuccess(user: LoginResponse['user'], accessToken: string) {
+    setAuth(user, accessToken);
+    navigate({ to: '/' });
   }
 
   return (
-    <RegistrationForm
-      onInitiated={(res, rawEmail) =>
-        setPending({
-          maskedEmail: res.email,
-          rawEmail,
-          expiresAt: res.expiresAt,
-          resentCount: 0,
-          nextResendAvailableAt: null,
-        })
-      }
-    />
+    <div className="w-full max-w-sm space-y-6">
+      <StepIndicator current={step} />
+
+      {step === 'company' && (
+        <CompanyStep
+          defaultValue={organizationName}
+          onNext={(name) => {
+            setOrganizationName(name);
+            setStep('personal');
+          }}
+        />
+      )}
+
+      {step === 'personal' && (
+        <RegistrationForm
+          organizationName={organizationName}
+          onBack={() => setStep('company')}
+          onInitiated={(res, rawEmail) => {
+            setPending({
+              maskedEmail: res.email,
+              rawEmail,
+              expiresAt: res.expiresAt,
+              resentCount: 0,
+              nextResendAvailableAt: null,
+            });
+            setStep('verification');
+          }}
+        />
+      )}
+
+      {step === 'verification' && pending && (
+        <VerificationStep
+          pending={pending}
+          onResent={(updated) =>
+            setPending((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    resentCount: updated.resentCount,
+                    nextResendAvailableAt: updated.nextResendAvailableAt,
+                  }
+                : prev,
+            )
+          }
+          onSuccess={handleSuccess}
+          onBack={() => {
+            setPending(null);
+            setStep('personal');
+          }}
+        />
+      )}
+
+      {step === 'company' && (
+        <p className="text-center text-sm text-gray-500">
+          Already have an account?{' '}
+          <Link
+            to="/auth/login"
+            className="font-medium text-blue-600 underline-offset-4 hover:underline"
+          >
+            Sign in
+          </Link>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CompanyStep({
+  defaultValue,
+  onNext,
+}: {
+  defaultValue: string;
+  onNext: (organizationName: string) => void;
+}) {
+  const form = useForm<CompanyInput>({
+    resolver: zodResolver(companySchema),
+    defaultValues: { organizationName: defaultValue },
+  });
+
+  return (
+    <>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Set up your company</h1>
+        <p className="mt-1 text-sm text-gray-500">Tell us about your organisation</p>
+      </div>
+
+      <form
+        onSubmit={form.handleSubmit((data) => onNext(data.organizationName))}
+        className="space-y-4"
+        noValidate
+      >
+        <FormField
+          label="Company name"
+          htmlFor="organizationName"
+          required
+          error={form.formState.errors.organizationName?.message}
+        >
+          <Input
+            id="organizationName"
+            autoComplete="organization"
+            placeholder="Acme Corp"
+            autoFocus
+            error={!!form.formState.errors.organizationName}
+            {...form.register('organizationName')}
+          />
+        </FormField>
+
+        <Button type="submit" className="w-full">
+          Continue
+        </Button>
+      </form>
+    </>
   );
 }
 
 function RegistrationForm({
+  organizationName,
+  onBack,
   onInitiated,
 }: {
+  organizationName: string;
+  onBack: () => void;
   onInitiated: (res: RegistrationInitiatedResponse, rawEmail: string) => void;
 }) {
   const form = useForm<RegisterFormInput, unknown, RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      organizationName,
       email: '',
       password: '',
       confirmPassword: '',
@@ -109,10 +253,13 @@ function RegistrationForm({
   const serverError = error ? getApiError(error) : null;
 
   return (
-    <div className="w-full max-w-sm space-y-6">
+    <>
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Create an account</h1>
-        <p className="mt-1 text-sm text-gray-500">Get started — it&apos;s free</p>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Create your account</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Setting up{' '}
+          <span className="font-medium text-gray-700">{organizationName}</span>
+        </p>
       </div>
 
       <form
@@ -202,16 +349,24 @@ function RegistrationForm({
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-500">
-        Already have an account?{' '}
-        <Link
-          to="/auth/login"
-          className="font-medium text-blue-600 underline-offset-4 hover:underline"
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex w-full items-center justify-center gap-1.5 text-sm text-gray-400 hover:text-gray-600"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-3.5 w-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
         >
-          Sign in
-        </Link>
-      </p>
-    </div>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+        Back to company details
+      </button>
+    </>
   );
 }
 
@@ -231,6 +386,7 @@ function VerificationStep({
   const resendCooldown = useCountdown(pending.nextResendAvailableAt);
   const canResend = resendCooldown === 0 && pending.resentCount < 3;
   const maxResendsReached = pending.resentCount >= 3;
+  const [otpKey, setOtpKey] = useState(0);
 
   const { mutate: verify, isPending: isVerifying } = useMutation({
     mutationFn: (submittedCode: string) =>
@@ -244,6 +400,7 @@ function VerificationStep({
     onError: (err) => {
       setCodeError(getApiError(err));
       setCode('');
+      setOtpKey((k) => k + 1);
     },
   });
 
@@ -258,26 +415,21 @@ function VerificationStep({
       onResent(data);
       setCodeError(null);
       setCode('');
+      setOtpKey((k) => k + 1);
     },
     onError: (err) => setCodeError(getApiError(err)),
   });
 
-  const submitCode = useCallback(
-    (value: string) => {
-      if (value.length === 6 && !isVerifying) {
-        setCodeError(null);
-        verify(value);
-      }
-    },
-    [isVerifying, verify],
-  );
-
-  useEffect(() => {
-    if (code.length === 6) submitCode(code);
-  }, [code, submitCode]);
+  function handleCodeChange(value: string) {
+    setCode(value);
+    if (value.length === 6 && !isVerifying) {
+      setCodeError(null);
+      verify(value);
+    }
+  }
 
   return (
-    <div className="w-full max-w-sm space-y-6">
+    <>
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
           <svg
@@ -304,8 +456,9 @@ function VerificationStep({
 
       <div className="space-y-4">
         <OtpInput
+          key={otpKey}
           value={code}
-          onChange={setCode}
+          onChange={handleCodeChange}
           disabled={isVerifying}
           hasError={!!codeError}
         />
@@ -375,7 +528,7 @@ function VerificationStep({
           Use a different email
         </button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -391,17 +544,6 @@ function OtpInput({
   hasError?: boolean;
 }) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
-
-  // re-focus first empty box when value is cleared after error
-  useEffect(() => {
-    if (value === '') {
-      inputRefs.current[0]?.focus();
-    }
-  }, [value]);
 
   const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? '');
 
@@ -453,13 +595,14 @@ function OtpInput({
             maxLength={1}
             value={digit}
             disabled={disabled}
+            autoFocus={i === 0}
             autoComplete="one-time-code"
             onChange={(e) => handleChange(i, e)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={handlePaste}
             onFocus={(e) => e.target.select()}
             className={[
-              'h-12 w-10 rounded-md border text-center text-lg font-semibold',
+              'h-12 w-10 border text-center text-lg font-semibold',
               'transition-colors duration-150',
               'focus:outline-none focus:ring-2 focus:ring-offset-1',
               'disabled:cursor-not-allowed disabled:opacity-50',

@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/jest",
-    "rootDir": ".",
+    "rootDir": "../../",
     "module": "commonjs",
     "moduleResolution": "node10",
     "ignoreDeprecations": "6.0",
@@ -14,5 +14,17 @@
     "jest.config.ts",
     "jest.config.cts",
     "src/**/*.ts"
+  ],
+  "references": [
+    { "path": "../../libs/backend/leave/tsconfig.lib.json" },
+    { "path": "../../libs/backend/shifts/tsconfig.lib.json" },
+    { "path": "../../libs/backend/employees/tsconfig.lib.json" },
+    { "path": "../../libs/backend/users/tsconfig.lib.json" },
+    { "path": "../../libs/backend/storage/tsconfig.lib.json" },
+    { "path": "../../libs/shared/types/tsconfig.lib.json" },
+    { "path": "../../libs/backend/queue/tsconfig.lib.json" },
+    { "path": "../../libs/backend/mail/tsconfig.lib.json" },
+    { "path": "../../libs/backend/database/tsconfig.lib.json" },
+    { "path": "../../libs/backend/auth/tsconfig.lib.json" }
   ]
 }

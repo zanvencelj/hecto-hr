@@ -5,6 +5,13 @@ import type { User } from '@hecto/database';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 
+export interface UpdateUserFieldsData {
+  firstName?: string;
+  lastName?: string;
+  role?: UserRole;
+  isActive?: boolean;
+}
+
 export interface CreateFromVerifiedEmailData {
   email: string;
   passwordHash: string;
@@ -81,6 +88,17 @@ export class UsersService {
 
   async updatePassword(id: string, newPasswordHash: string): Promise<void> {
     await this.usersRepository.update(id, { passwordHash: newPasswordHash });
+  }
+
+  async updateUserFields(id: string, data: UpdateUserFieldsData): Promise<void> {
+    const updates: Record<string, unknown> = {};
+    if (data.firstName !== undefined) updates['firstName'] = data.firstName;
+    if (data.lastName !== undefined) updates['lastName'] = data.lastName;
+    if (data.role !== undefined) updates['role'] = data.role;
+    if (data.isActive !== undefined) updates['isActive'] = data.isActive;
+    if (Object.keys(updates).length > 0) {
+      await this.usersRepository.update(id, updates as Parameters<typeof this.usersRepository.update>[1]);
+    }
   }
 
   toPublic(user: User): UserPublic {

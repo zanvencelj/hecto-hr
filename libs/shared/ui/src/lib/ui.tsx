@@ -21,4 +21,8 @@ export { PageHeader } from './page-header';
 export type { PageHeaderProps } from './page-header';
 export { Avatar } from './avatar';
 export type { AvatarProps } from './avatar';
+export { Select } from './select';
+export type { SelectProps } from './select';
+export { Textarea } from './textarea';
+export type { TextareaProps } from './textarea';
 export { cn } from './utils';

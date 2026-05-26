@@ -22,6 +22,15 @@
   ],
   "references": [
     {
+      "path": "../../libs/backend/leave/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/shifts/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/employees/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/backend/users/tsconfig.lib.json"
     },
     {

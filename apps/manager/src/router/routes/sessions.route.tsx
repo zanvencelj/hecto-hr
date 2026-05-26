@@ -16,6 +16,7 @@ import {
   Spinner,
 } from '@hecto/ui';
 import type { SessionInfo } from '@hecto/shared-types';
+import { fmtDate } from '@/lib/date';
 
 export const sessionsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -154,11 +155,7 @@ interface SessionCardProps {
 
 function SessionCard({ session, action }: SessionCardProps) {
   const lastUsed = formatRelative(new Date(session.lastUsedAt));
-  const createdAt = new Date(session.createdAt).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const createdAt = fmtDate(session.createdAt);
 
   return (
     <Card>
@@ -210,5 +207,5 @@ function formatRelative(date: Date): string {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 86400 * 30) return `${Math.floor(diff / 86400)}d ago`;
-  return date.toLocaleDateString();
+  return fmtDate(date);
 }

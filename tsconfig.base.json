@@ -28,6 +28,9 @@
       "@hecto/mail": ["./libs/backend/mail/src/index.ts"],
       "@hecto/queue": ["./libs/backend/queue/src/index.ts"],
       "@hecto/storage": ["./libs/backend/storage/src/index.ts"],
+      "@hecto/employees": ["./libs/backend/employees/src/index.ts"],
+      "@hecto/shifts": ["./libs/backend/shifts/src/index.ts"],
+      "@hecto/leave": ["./libs/backend/leave/src/index.ts"],
       "@hecto/ui": ["./libs/shared/ui/src/index.ts"],
       "@hecto/api-client": ["./libs/shared/api-client/src/index.ts"],
       "@hecto/schemas": ["./libs/shared/schemas/src/index.ts"]

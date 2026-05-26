@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { DATABASE_CONNECTION, type Database, users, organizations } from '@hecto/database';
+import { eq } from 'drizzle-orm';
+import { DATABASE_CONNECTION, type Database, type LeaveType, users, organizations, leaveTypes } from '@hecto/database';
 
 const SEED_PASSWORD = 'hecto123';
 const DEV_ORG_NAME = 'Hecto Dev';
@@ -54,27 +55,53 @@ export class SeedService {
     this.logger.log('Starting database seed...');
     const orgId = await this.seedOrganization();
     await this.seedUsers(orgId);
+    await this.seedLeaveTypes(orgId);
     this.logger.log('Seed completed.');
   }
 
   private async seedOrganization(): Promise<string> {
-    const existing = await this.db
-      .select({ id: organizations.id })
+    const existing = (await this.db
+      .select()
       .from(organizations)
-      .limit(1);
+      .where(eq(organizations.slug, DEV_ORG_SLUG))
+      .limit(1)) as Array<{ id: string }>;
 
     if (existing[0]) {
       this.logger.log(`Skipped organization (already exists): ${DEV_ORG_SLUG}`);
       return existing[0].id;
     }
 
-    const inserted = await this.db
+    const inserted = (await this.db
       .insert(organizations)
       .values({ name: DEV_ORG_NAME, slug: DEV_ORG_SLUG })
-      .returning({ id: organizations.id });
+      .returning()) as Array<{ id: string }>;
 
     this.logger.log(`Created organization: ${DEV_ORG_SLUG}`);
-    return inserted[0]!.id;
+    return inserted[0].id;
+  }
+
+  private async seedLeaveTypes(organizationId: string): Promise<void> {
+    const defaults = [
+      { name: 'Annual Leave', code: 'annual', color: '#6366f1', defaultDaysPerYear: 20, isPaid: true },
+      { name: 'Sick Leave', code: 'sick', color: '#f59e0b', defaultDaysPerYear: 10, isPaid: true },
+      { name: 'Unpaid Leave', code: 'unpaid', color: '#6b7280', defaultDaysPerYear: 0, isPaid: false },
+    ];
+
+    const existing = await this.db
+      .select()
+      .from(leaveTypes)
+      .where(eq(leaveTypes.organizationId, organizationId)) as LeaveType[];
+
+    const existingCodes = new Set((existing as Array<{ code: string }>).map((r) => r.code));
+
+    for (const lt of defaults) {
+      if (existingCodes.has(lt.code)) {
+        this.logger.log(`Skipped leave type (already exists): ${lt.name}`);
+        continue;
+      }
+      await this.db.insert(leaveTypes).values({ ...lt, organizationId });
+      this.logger.log(`Created leave type: ${lt.name}`);
+    }
   }
 
   private async seedUsers(organizationId: string): Promise<void> {

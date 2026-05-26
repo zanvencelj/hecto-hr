@@ -51,124 +51,164 @@ This document describes the project structure, technology stack, design decision
 ```
 hectohr/
 ├── apps/
-│   ├── backend/                          # NestJS API application
+│   ├── backend/                              # NestJS API application
 │   │   ├── src/
-│   │   │   ├── main.ts                   # HTTP server entry point
-│   │   │   ├── worker.ts                 # BullMQ worker entry point
+│   │   │   ├── main.ts                       # HTTP server entry point
+│   │   │   ├── worker.ts                     # BullMQ worker entry point
 │   │   │   ├── app/
-│   │   │   │   ├── app.module.ts         # Root DI module
-│   │   │   │   └── health.controller.ts  # GET /api/health
-│   │   │   ├── seed/
-│   │   │   │   └── seed.service.ts       # Database seeding
-│   │   │   └── worker/
-│   │   │       └── worker.module.ts      # Worker-only NestJS module
-│   │   ├── Dockerfile                    # Multi-stage build (backend + worker)
-│   │   └── webpack.worker.config.js      # Webpack config for worker bundle
+│   │   │   │   └── app.module.ts             # Root DI module
+│   │   │   └── seed/
+│   │   │       └── seed.service.ts           # Database seeding (users + leave types)
+│   │   ├── Dockerfile                        # Multi-stage build (backend + worker)
+│   │   └── webpack.worker.config.js          # Webpack config for worker bundle
 │   │
-│   └── manager/                          # React SPA (port 4200)
+│   └── manager/                              # React SPA (port 4200)
 │       └── src/
-│           ├── main.tsx                  # React entry point
+│           ├── main.tsx                      # React entry point
 │           ├── app/
-│           │   ├── app.tsx               # Root component + router
-│           │   └── providers.tsx         # QueryClient, Router providers
-│           ├── components/layout/        # Shared layout components
+│           │   ├── app.tsx                   # Root component + router
+│           │   └── providers.tsx             # QueryClient, Router, ToastProvider
+│           ├── components/layout/            # AppLayout shell
 │           ├── lib/
-│           │   ├── api.ts                # Axios client + auth interceptor setup
-│           │   └── query-client.ts       # TanStack Query configuration
-│           ├── router/routes/auth/
-│           │   ├── login.route.tsx       # /auth/login
-│           │   └── register.route.tsx    # /auth/register + /verify + /resend
+│           │   ├── api.ts                    # Axios client + auth interceptor setup
+│           │   ├── date.ts                   # fmtDate / fmtDateTime helpers (dd.mm.YYYY)
+│           │   └── query-client.ts           # TanStack Query configuration
+│           ├── router/routes/
+│           │   ├── auth/
+│           │   │   ├── login.route.tsx        # /auth/login
+│           │   │   ├── register.route.tsx     # /auth/register (OTP verification)
+│           │   │   └── accept-invite.route.tsx# /auth/accept-invite
+│           │   ├── employees/
+│           │   │   ├── list.route.tsx         # /employees — employee table
+│           │   │   └── detail.route.tsx       # /employees/:id — profile + edit
+│           │   ├── leave/
+│           │   │   ├── manager.route.tsx      # /leave — requests + balances (manager)
+│           │   │   └── employee.route.tsx     # /my-leave — balances + requests (employee)
+│           │   └── schedule/
+│           │       └── manager.route.tsx      # /schedule — weekly calendar (manager)
 │           └── stores/
-│               └── auth.store.ts         # Zustand auth state
+│               └── auth.store.ts             # Zustand auth state
 │
 ├── libs/
 │   ├── backend/
-│   │   ├── auth/                         # @hecto/auth
+│   │   ├── auth/                             # @hecto/auth
 │   │   │   └── src/lib/
 │   │   │       ├── auth.module.ts
-│   │   │       ├── auth.service.ts       # Login, register initiation, verification, refresh, logout
-│   │   │       ├── auth.controller.ts    # /auth/* endpoints
-│   │   │       ├── sessions.repository.ts
-│   │   │       ├── email-verification.repository.ts
+│   │   │       ├── auth.service.ts           # Login, register, verify, refresh, logout
+│   │   │       ├── auth.controller.ts        # /auth/* endpoints
 │   │   │       ├── guards/
-│   │   │       │   └── jwt-auth.guard.ts
-│   │   │       ├── decorators/
-│   │   │       │   ├── current-user.decorator.ts
-│   │   │       │   └── public.decorator.ts
-│   │   │       └── dto/
-│   │   │           ├── register.dto.ts
-│   │   │           ├── login.dto.ts
-│   │   │           ├── verify-email-code.dto.ts
-│   │   │           └── resend-verification-code.dto.ts
+│   │   │       │   ├── jwt-auth.guard.ts     # Global JWT guard
+│   │   │       │   └── roles.guard.ts        # Role-based access guard
+│   │   │       └── decorators/
+│   │   │           ├── current-user.decorator.ts
+│   │   │           ├── public.decorator.ts
+│   │   │           └── roles.decorator.ts    # @Roles('admin', 'hr', ...)
 │   │   │
-│   │   ├── database/                     # @hecto/database
-│   │   │   ├── migrations/               # SQL migration files (Drizzle Kit)
+│   │   ├── database/                         # @hecto/database
+│   │   │   ├── migrations/                   # SQL migration files (Drizzle Kit)
+│   │   │   └── src/lib/schema/
+│   │   │       ├── users.schema.ts
+│   │   │       ├── sessions.schema.ts
+│   │   │       ├── email-verifications.schema.ts
+│   │   │       ├── invitations.schema.ts
+│   │   │       ├── employee-profiles.schema.ts
+│   │   │       ├── shifts.schema.ts
+│   │   │       ├── shift-breaks.schema.ts
+│   │   │       ├── recurring-shifts.schema.ts
+│   │   │       ├── leave-types.schema.ts
+│   │   │       ├── leave-balances.schema.ts
+│   │   │       └── leave-requests.schema.ts
+│   │   │
+│   │   ├── employees/                        # @hecto/employees
 │   │   │   └── src/lib/
-│   │   │       ├── database.module.ts
-│   │   │       ├── database.provider.ts
-│   │   │       └── schema/
-│   │   │           ├── users.schema.ts
-│   │   │           ├── sessions.schema.ts
-│   │   │           └── email-verifications.schema.ts
+│   │   │       ├── employees.module.ts
+│   │   │       ├── employees.service.ts      # CRUD, invite, profile management
+│   │   │       ├── employees.controller.ts   # /employees endpoints
+│   │   │       └── employees.repository.ts
 │   │   │
-│   │   ├── mail/                         # @hecto/mail
+│   │   ├── leave/                            # @hecto/leave
+│   │   │   └── src/lib/
+│   │   │       ├── leave.module.ts
+│   │   │       ├── leave.service.ts          # Leave types, balances, requests, approvals
+│   │   │       ├── leave.controller.ts       # /leave endpoints
+│   │   │       ├── leave.repository.ts       # DB queries with user joins
+│   │   │       └── dto/
+│   │   │           ├── create-leave-request.dto.ts
+│   │   │           ├── review-leave-request.dto.ts
+│   │   │           ├── set-leave-balance.dto.ts
+│   │   │           └── edit-request-days.dto.ts
+│   │   │
+│   │   ├── mail/                             # @hecto/mail
 │   │   │   └── src/lib/
 │   │   │       ├── mail.module.ts
-│   │   │       ├── mail.service.ts       # sendWelcomeEmail, sendVerificationEmail
-│   │   │       └── templates/
-│   │   │           ├── welcome.template.ts
-│   │   │           └── verification-code.template.ts
+│   │   │       └── mail.service.ts           # sendWelcomeEmail, sendVerificationEmail, sendInviteEmail
 │   │   │
-│   │   ├── queue/                        # @hecto/queue
+│   │   ├── queue/                            # @hecto/queue
 │   │   │   └── src/lib/
-│   │   │       ├── queue.module.ts       # BullMQ module (global)
-│   │   │       ├── queue.constants.ts    # Queue name + job type constants
-│   │   │       ├── tasks-queue.service.ts # Enqueue jobs
+│   │   │       ├── queue.module.ts
+│   │   │       ├── queue.constants.ts        # Queue name + job type constants
+│   │   │       ├── tasks-queue.service.ts    # Enqueue jobs
 │   │   │       └── processors/
-│   │   │           └── tasks.processor.ts # Process jobs (concurrency: 5)
+│   │   │           └── tasks.processor.ts    # Process jobs (concurrency 5)
 │   │   │
-│   │   └── users/                        # @hecto/users
+│   │   ├── shifts/                           # @hecto/shifts
+│   │   │   └── src/lib/
+│   │   │       ├── shifts.module.ts
+│   │   │       ├── shifts.service.ts         # Shift CRUD, recurring, copy week, bulk delete
+│   │   │       ├── shifts.controller.ts      # /shifts endpoints
+│   │   │       └── shifts.repository.ts
+│   │   │
+│   │   └── users/                            # @hecto/users
 │   │       └── src/lib/
 │   │           ├── users.module.ts
-│   │           ├── users.service.ts      # create, findById, findByEmail, createFromVerifiedEmail
-│   │           ├── users.repository.ts
-│   │           └── dto/
-│   │               └── create-user.dto.ts
+│   │           ├── users.service.ts          # create, findById, findByEmail
+│   │           └── users.repository.ts
 │   │
 │   └── shared/
-│       ├── api-client/                   # @hecto/api-client
+│       ├── api-client/                       # @hecto/api-client
 │       │   └── src/lib/
-│       │       ├── http-client.ts        # Axios factory
-│       │       ├── auth-interceptors.ts  # Token refresh + error passthrough
-│       │       └── api-error.ts          # getApiError() helper
+│       │       ├── http-client.ts            # Axios factory
+│       │       ├── auth-interceptors.ts      # Token refresh + error passthrough
+│       │       └── api-error.ts             # getApiError() helper
 │       │
-│       ├── schemas/                      # @hecto/schemas
+│       ├── schemas/                          # @hecto/schemas
 │       │   └── src/lib/
-│       │       ├── auth.schema.ts        # loginSchema, registerSchema (Zod)
-│       │       └── user.schema.ts
+│       │       └── auth.schema.ts            # loginSchema, registerSchema (Zod)
 │       │
-│       ├── types/                        # @hecto/shared-types
+│       ├── types/                            # @hecto/shared-types
 │       │   └── src/lib/
-│       │       ├── auth.types.ts         # AccessTokenPayload, RefreshTokenPayload, LoginResponse, etc.
-│       │       └── user.types.ts         # UserPublic, SessionInfo
+│       │       ├── auth.types.ts             # AccessTokenPayload, LoginResponse, etc.
+│       │       ├── employee.types.ts         # EmployeePublic
+│       │       ├── leave.types.ts            # LeaveTypePublic, LeaveBalancePublic, LeaveRequestPublic
+│       │       └── shift.types.ts            # ShiftPublic, ShiftBreakPublic
 │       │
-│       └── ui/                           # @hecto/ui
+│       └── ui/                               # @hecto/ui
 │           └── src/lib/
 │               ├── button.tsx
 │               ├── input.tsx
 │               ├── form-field.tsx
 │               ├── alert.tsx
+│               ├── badge.tsx
 │               ├── card.tsx
-│               └── ...                   # More Tailwind-based components
+│               ├── select.tsx
+│               ├── textarea.tsx
+│               ├── avatar.tsx
+│               ├── separator.tsx
+│               ├── page-header.tsx
+│               ├── time-picker.tsx           # Custom HH:MM segments (24h, no browser locale)
+│               ├── date-picker.tsx           # Custom DD.MM.YYYY segments
+│               ├── dialog.tsx                # Accessible modal
+│               ├── toast.tsx                 # ToastProvider + useToast() hook
+│               └── skeleton.tsx             # Loading placeholder
 │
-├── docs/                                 # Documentation
-├── docker-compose.yml                    # All services: postgres, redis, mailhog, backend, worker
-├── drizzle.config.ts                     # Drizzle Kit config (schema path, migrations output)
-├── mise.toml                             # Tool versions and task shortcuts
-├── nx.json                               # Nx workspace config
-├── tsconfig.base.json                    # Base TypeScript config + @hecto/* paths
-├── pnpm-workspace.yaml                   # pnpm monorepo setup
-└── package.json                          # Root workspace dependencies
+├── docs/
+├── docker-compose.yml
+├── drizzle.config.ts
+├── mise.toml
+├── nx.json
+├── tsconfig.base.json
+├── pnpm-workspace.yaml
+└── package.json
 ```
 
 ## Library Dependency Graph
@@ -176,11 +216,10 @@ hectohr/
 ```
 @hecto/shared-types          (no local deps)
 @hecto/schemas               (no local deps)
-       ↑                            ↑
-@hecto/api-client            @hecto/shared-types
-       ↑
 @hecto/ui                    (no local deps)
-       ↑
+       ↑                            ↑
+@hecto/api-client ──────── @hecto/shared-types
+
 apps/manager ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui
 
 @hecto/database              (no local deps)
@@ -193,227 +232,369 @@ apps/manager ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types
        ↑
 @hecto/auth    ──── @hecto/database, @hecto/users, @hecto/queue, @hecto/shared-types
        ↑
-apps/backend   ──── @hecto/auth, @hecto/database, @hecto/queue
+@hecto/employees ── @hecto/database, @hecto/shared-types
+@hecto/shifts    ── @hecto/database, @hecto/shared-types
+@hecto/leave     ── @hecto/database, @hecto/shared-types
+       ↑
+apps/backend ──── @hecto/auth, @hecto/database, @hecto/employees, @hecto/leave,
+                  @hecto/queue, @hecto/shifts, @hecto/users
 ```
 
-All cross-package imports use the `@hecto/*` namespace. TypeScript resolves them via `paths` in `tsconfig.base.json` directly to source `.ts` files. Webpack resolves them via `resolve.alias`. Nx manages TypeScript project references via `nx sync`.
+## Authentication & RBAC Architecture
 
-## Authentication Architecture
+### Roles
 
-Authentication is implemented in `@hecto/auth` and uses stateful JWT with server-side session tracking. Registration requires email verification before an account is created.
+Every `users` row has a `role` column (`admin`, `hr`, `manager`, `employee`). The role is embedded in the JWT access token payload and enforced by `RolesGuard`.
+
+```
+admin    — full access to all endpoints
+hr       — same as admin for employee and leave management
+manager  — manage schedules, review leave requests, view employees
+employee — request leave, view own schedule and balances
+```
 
 ### Token Strategy
 
 | Token | Storage | Lifetime | Purpose |
 |-------|---------|---------|---------|
-| Access token | `HttpOnly` cookie (`access_token`) + response body | `JWT_ACCESS_EXPIRY` (default: `15m`) | Authorise API requests |
-| Refresh token | `HttpOnly` cookie (`refresh_token`) + response body | `JWT_REFRESH_EXPIRY` (default: `7d`) | Obtain new access tokens |
-
-Both tokens are signed JWTs with separate secrets (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`).
+| Access token | `HttpOnly` cookie + response body | `JWT_ACCESS_EXPIRY` (default `15m`) | Authorise API requests |
+| Refresh token | `HttpOnly` cookie + response body | `JWT_REFRESH_EXPIRY` (default `7d`) | Obtain new access tokens |
 
 ### Registration Flow (2-step with Email Verification)
 
 ```
 Client                       AuthController            AuthService              DB / Queue
-  │                               │                         │                       │
-  │  POST /api/auth/register      │                         │                       │
-  │  { email, password, name }    │                         │                       │
-  │ ─────────────────────────────►│                         │                       │
-  │                               │  initiateRegistration() │                       │
-  │                               │ ───────────────────────►│                       │
-  │                               │                         │  check email exists   │
-  │                               │                         │ ─────────────────────►│
-  │                               │                         │  hash password (argon2id)
-  │                               │                         │  generate 6-digit OTP │
-  │                               │                         │  HMAC-SHA256(OTP)     │
-  │                               │                         │  store email_verifications row
-  │                               │                         │ ─────────────────────►│
-  │                               │                         │  enqueue email job    │
-  │                               │                         │ ─────────────────────►│ (Redis/BullMQ)
-  │  202 { maskedEmail, expiresAt }│                         │                       │
-  │ ◄─────────────────────────────│                         │                       │
-  │                               │                         │                       │
-  │  [user receives email with code]                        │                       │
-  │                               │                         │                       │
-  │  POST /api/auth/register/verify│                        │                       │
-  │  { email, code: "123456" }    │                         │                       │
-  │ ─────────────────────────────►│                         │                       │
-  │                               │  verifyEmailCode()      │                       │
-  │                               │ ───────────────────────►│                       │
-  │                               │                         │  lookup verification  │
-  │                               │                         │  timing-safe compare  │
-  │                               │                         │  create user account  │
-  │                               │                         │  create session       │
-  │                               │                         │  sign tokens          │
-  │                               │                         │  delete verification  │
-  │  201 { user, accessToken, refreshToken }                │                       │
-  │ ◄─────────────────────────────│                         │                       │
+  │  POST /auth/register      │                         │                       │
+  │  { email, password, name }│ ─────────────────────── initiateRegistration() ►│
+  │                           │                         │  hash password        │
+  │                           │                         │  generate 6-digit OTP │
+  │                           │                         │  store HMAC(OTP) + pending data
+  │                           │                         │  enqueue email job ───►│ (Redis)
+  │  202 { maskedEmail, expiresAt }◄───────────────────  │                       │
+  │                           │                         │                       │
+  │  POST /auth/register/verify│                        │                       │
+  │  { email, code }          │ ─────────────────────── verifyEmailCode() ──────►│
+  │                           │                         │  timing-safe compare  │
+  │                           │                         │  create user + session│
+  │  201 { user, tokens }◄────│                         │                       │
 ```
 
-**Resend flow**: `POST /api/auth/register/resend-code` regenerates the OTP (up to 3 times, with 30-second cooldown). A new HMAC is stored and the old code is invalidated.
+### Invite Flow
 
-### Login Flow
+Managers and HR can invite new employees without requiring self-registration:
 
 ```
-Client                        AuthController          AuthService              DB
-  │                                │                       │                    │
-  │  POST /api/auth/login          │                       │                    │
-  │  { email, password }           │                       │                    │
-  │ ─────────────────────────────► │                       │                    │
-  │                                │  login(dto, req, res) │                    │
-  │                                │ ─────────────────────►│                    │
-  │                                │                       │  validateCredentials│
-  │                                │                       │ ──────────────────►│
-  │                                │                       │  (argon2id verify) │
-  │                                │                       │ ◄──────────────────│
-  │                                │                       │  sessionsRepo.create│
-  │                                │                       │ ──────────────────►│
-  │                                │                       │  sign access+refresh│
-  │                                │                       │  set cookies       │
-  │  200 { user, accessToken, refreshToken }               │                    │
-  │ ◄──────────────────────────────│                       │                    │
+POST /employees/invite  →  create invitation record  →  enqueue invite email
+                                                             │
+                        ◄── employee opens link → POST /auth/accept-invite
+                                                  set password, activate account
 ```
-
-### API Endpoints
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/api/auth/register` | Public | Initiate registration — sends OTP email, returns `202` |
-| `POST` | `/api/auth/register/verify` | Public | Submit OTP code — creates account, returns tokens |
-| `POST` | `/api/auth/register/resend-code` | Public | Resend OTP (max 3×, 30 s cooldown) |
-| `POST` | `/api/auth/login` | Public | Login with email + password |
-| `POST` | `/api/auth/refresh` | Public | Refresh access token using cookie |
-| `POST` | `/api/auth/logout` | Public | Revoke current session |
-| `POST` | `/api/auth/logout-all` | Public | Revoke all sessions for user |
-| `GET` | `/api/auth/sessions` | JWT | List active sessions |
-| `DELETE` | `/api/auth/sessions/:id` | JWT | Revoke a specific session |
-
-### Email Verification Security
-
-- **OTP generation**: `crypto.randomInt(100000, 1000000)` — cryptographically secure 6-digit code
-- **Storage**: Code is stored as HMAC-SHA256 keyed by `EMAIL_VERIFICATION_SECRET` — raw code never persisted
-- **Comparison**: `crypto.timingSafeEqual` — prevents timing-based enumeration attacks
-- **Expiry**: 10 minutes from creation (or last resend)
-- **Attempt limit**: 5 wrong attempts invalidate the record, forcing a fresh registration
-- **Pending data**: Password hash + profile fields stored as JSONB; account is only created on successful verification
-
-### Session Management
-
-Every login/verification creates a row in the `sessions` table. The `sessionId` is embedded in both JWT payloads, enabling:
-
-- **Per-device logout** — `DELETE /api/auth/sessions/:sessionId`
-- **Logout all** — `POST /api/auth/logout-all`
-- **Session list** — `GET /api/auth/sessions` (device name, platform, IP, last used)
-- **Token rotation** — refresh checks the session is still active before issuing a new access token
 
 ### Guards and Decorators
 
 | Symbol | Type | Usage |
 |--------|------|-------|
 | `JwtAuthGuard` | Guard | Applied globally; blocks unauthenticated requests |
-| `@Public()` | Decorator | Marks a route as unauthenticated (bypasses `JwtAuthGuard`) |
+| `RolesGuard` | Guard | Applied globally; enforces `@Roles()` on protected routes |
+| `@Public()` | Decorator | Marks route as unauthenticated (bypasses `JwtAuthGuard`) |
+| `@Roles(...roles)` | Decorator | Restricts route to listed roles |
 | `@CurrentUser()` | Param decorator | Injects `AccessTokenPayload` from `req.user` |
 
-## Queue & Email Architecture
+## API Endpoints
 
-Email delivery is decoupled from the HTTP request cycle using BullMQ:
+### Authentication — `/auth`
 
-```
-HTTP Request
-    │
-    ▼
-AuthService
-    │  tasksQueueService.sendVerificationEmail(email, code, name)
-    ▼
-BullMQ Queue ──► Redis
-    │
-    ▼  (processed by worker container)
-TasksProcessor
-    │  mailService.sendVerificationEmail(email, code, name)
-    ▼
-Nodemailer ──► SMTP (Mailhog in dev, real SMTP in prod)
-```
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/auth/register` | Public | Initiate registration — sends OTP email |
+| `POST` | `/auth/register/verify` | Public | Submit OTP — creates account, returns tokens |
+| `POST` | `/auth/register/resend-code` | Public | Resend OTP (max 3×, 30 s cooldown) |
+| `POST` | `/auth/login` | Public | Login with email + password |
+| `POST` | `/auth/accept-invite` | Public | Accept invitation, set password |
+| `POST` | `/auth/refresh` | Public | Refresh access token using cookie |
+| `POST` | `/auth/logout` | JWT | Revoke current session |
+| `POST` | `/auth/logout-all` | JWT | Revoke all sessions |
+| `GET` | `/auth/sessions` | JWT | List active sessions |
+| `DELETE` | `/auth/sessions/:id` | JWT | Revoke a specific session |
 
-**Worker process** (`apps/backend/src/worker.ts`): A separate Node.js process that runs only the `WorkerModule` (Queue + Mail providers). It processes jobs with concurrency 5 and retries with exponential backoff.
+### Employees — `/employees`
 
-**Job types** (defined in `queue.constants.ts`):
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/employees` | JWT | List employees in organisation |
+| `GET` | `/employees/:id` | JWT | Get employee profile |
+| `PATCH` | `/employees/:id` | admin/hr/manager | Update employee profile |
+| `POST` | `/employees/invite` | admin/hr/manager | Send invitation email |
 
-| Job | Payload | Description |
-|-----|---------|-------------|
-| `send-welcome-email` | `{ email, firstName }` | Sent after successful registration |
-| `send-verification-email` | `{ email, code, firstName }` | Sent during registration initiation and resend |
+### Shifts — `/shifts`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/shifts` | JWT | List shifts (`?from=&to=&userId=`) |
+| `POST` | `/shifts` | admin/hr/manager | Create shift (optionally recurring) |
+| `PATCH` | `/shifts/:id` | admin/hr/manager | Update shift |
+| `DELETE` | `/shifts/:id` | admin/hr/manager | Delete shift |
+| `DELETE` | `/shifts/user/:userId` | admin/hr/manager | Bulk delete (`?future=true` for future only) |
+
+### Leave — `/leave`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/leave/types` | JWT | List leave types for organisation |
+| `GET` | `/leave/balances/org` | admin/hr/manager | All employee balances (`?year=`) |
+| `GET` | `/leave/balances/employee/:userId` | JWT | Employee balances (own or manager) |
+| `POST` | `/leave/balances` | admin/hr/manager | Set leave quota for employee |
+| `GET` | `/leave/requests/org` | admin/hr/manager | All requests (`?status=pending`) |
+| `GET` | `/leave/requests/employee/:userId` | JWT | Employee's own requests |
+| `POST` | `/leave/requests` | JWT | Submit leave request |
+| `PATCH` | `/leave/requests/:id/review` | admin/hr/manager | Approve or reject request |
+| `PATCH` | `/leave/requests/:id/days` | admin/hr/manager | Edit actual days taken |
+| `DELETE` | `/leave/requests/:id` | JWT | Cancel request |
 
 ## Database Schema
 
 Migrations live in `libs/backend/database/migrations/` and are applied with `pnpm db:migrate`.
 
-**`users`**
+### `users`
 
 | Column | Type | Notes |
 |--------|------|-------|
-| `id` | `uuid` | Primary key, random |
-| `email` | `varchar(255)` | Unique, lowercase, required |
+| `id` | `uuid` | PK |
+| `email` | `varchar(255)` | Unique |
 | `username` | `varchar(150)` | Unique, optional |
-| `password_hash` | `varchar(255)` | argon2id hash (memoryCost 64 MB, timeCost 3) |
+| `password_hash` | `varchar(255)` | argon2id |
 | `first_name`, `last_name` | `varchar(150)` | Optional |
-| `is_active` | `boolean` | Soft-disable accounts |
-| `is_superuser`, `is_staff` | `boolean` | Role flags embedded in JWT payload |
-| `date_joined`, `last_login` | `timestamptz` | Audit timestamps |
+| `role` | `enum` | `admin`, `hr`, `manager`, `employee` |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `is_active` | `boolean` | Soft-disable |
+| `date_joined`, `last_login` | `timestamptz` | Audit |
 
-**`sessions`**
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | `uuid` | Primary key; embedded in JWT `sessionId` |
-| `user_id` | `uuid` | FK → `users.id` (cascade delete) |
-| `ip_address` | `varchar(45)` | Respects `X-Forwarded-For` |
-| `user_agent` | `text` | Raw UA string |
-| `device_name` | `varchar(255)` | Detected or provided by client |
-| `platform` | `varchar(50)` | `web`, `mobile`, `api` |
-| `is_active` | `boolean` | Revoked on logout |
-| `last_used_at` | `timestamptz` | Updated on each refresh |
-| `expires_at` | `timestamptz` | Enforced by refresh endpoint |
-
-**`email_verifications`**
+### `employee_profiles`
 
 | Column | Type | Notes |
 |--------|------|-------|
-| `id` | `uuid` | Primary key |
-| `email` | `varchar(255)` | Indexed; one active record per email |
-| `code_hash` | `varchar(64)` | HMAC-SHA256 hex of the OTP |
-| `pending_data` | `jsonb` | `{ passwordHash, firstName, lastName, deviceName, ipAddress, userAgent }` |
-| `resend_count` | `smallint` | Number of resends used (max 3) |
-| `last_resent_at` | `timestamptz` | Used to enforce 30 s resend cooldown |
-| `wrong_attempts` | `smallint` | Wrong code attempts (max 5 before invalidation) |
-| `expires_at` | `timestamptz` | 10 minutes from creation or last resend |
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` (cascade) |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `position`, `department` | `varchar` | Optional |
+| `phone` | `varchar(50)` | Optional |
+| `hire_date` | `date` | Optional |
+| `notes` | `text` | Optional |
+
+### `shifts`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `date` | `date` | Shift date |
+| `start_time`, `end_time` | `time` | `HH:MM:SS` format |
+| `notes` | `text` | Optional |
+| `recurring_shift_id` | `uuid` | FK → `recurring_shifts` (nullable) |
+
+### `shift_breaks`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `shift_id` | `uuid` | FK → `shifts` (cascade) |
+| `start_time`, `end_time` | `time` | Optional — null for fixed-duration breaks |
+| `duration_minutes` | `integer` | Optional |
+| `is_fixed` | `boolean` | Fixed duration vs. timed break |
+| `is_paid` | `boolean` | |
+
+### `recurring_shifts`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `days_of_week` | `integer[]` | 0=Sun … 6=Sat |
+| `start_time`, `end_time` | `time` | |
+| `start_date` | `date` | Recurrence start |
+| `end_date` | `date` | Optional recurrence end |
+| `is_active` | `boolean` | |
+
+### `leave_types`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `organization_id` | `uuid` | FK → `organizations` (null for system types) |
+| `name` | `varchar(100)` | Display name |
+| `code` | `varchar(20)` | Short code (e.g. `SICK`) |
+| `color` | `varchar(7)` | Hex color for calendar display |
+| `default_days_per_year` | `integer` | Suggested quota |
+| `is_paid` | `boolean` | |
+| `is_active` | `boolean` | |
+
+### `leave_balances`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `leave_type_id` | `uuid` | FK → `leave_types` |
+| `year` | `integer` | Calendar year |
+| `total_days` | `numeric(5,1)` | Quota (`0` = no limit set / tracks usage only) |
+| `used_days` | `numeric(5,1)` | Approved days consumed |
+| `pending_days` | `numeric(5,1)` | Pending approval |
+
+> A balance row is upserted on first request or quota assignment. `total_days = 0` means no quota is set (treated as unlimited in the API — returned as `null` in `LeaveBalancePublic.totalDays`).
+
+### `leave_requests`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` (the employee) |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `leave_type_id` | `uuid` | FK → `leave_types` |
+| `start_date`, `end_date` | `date` | Inclusive range |
+| `total_days` | `numeric(5,1)` | Computed weekdays; editable by managers |
+| `status` | `enum` | `pending`, `approved`, `rejected`, `cancelled` |
+| `requested_by_user_id` | `uuid` | FK → `users` (submitter; may differ from employee for manual entry) |
+| `reviewed_by_user_id` | `uuid` | FK → `users` (nullable) |
+| `reviewed_at` | `timestamptz` | Nullable |
+| `is_manual_entry` | `boolean` | Manager-created entries are auto-approved |
+| `is_edited` | `boolean` | Set when `total_days` is updated post-submission |
+| `edited_by_user_id` | `uuid` | FK → `users` (nullable) |
+| `edited_at` | `timestamptz` | Nullable |
+| `notes` | `text` | Employee notes |
+| `review_notes` | `text` | Manager review notes |
+
+### `invitations`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `email` | `varchar(255)` | Invitee email |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `invited_by_user_id` | `uuid` | FK → `users` |
+| `token` | `varchar` | Secure random token for accept link |
+| `role` | `enum` | Role assigned on acceptance |
+| `expires_at` | `timestamptz` | |
+| `accepted_at` | `timestamptz` | Nullable |
 
 ## Frontend Architecture
-
-The `apps/manager` app is a React SPA served by Vite on port 4200.
 
 ### Routing (TanStack Router)
 
 ```
-/                    → root.route.tsx  (requires auth, redirects to /sessions)
-/auth/login          → login.route.tsx
-/auth/register       → register.route.tsx (handles both form + verification steps)
-/sessions            → sessions.route.tsx (active sessions list)
+/                       → redirect based on role
+/auth/login             → login form
+/auth/register          → registration + OTP verification
+/auth/accept-invite     → accept invitation, set password
+/employees              → employee list (admin/hr/manager)
+/employees/:id          → employee profile + edit form
+/schedule               → weekly shift calendar (admin/hr/manager)
+/leave                  → manager leave: requests + balance grid
+/my-leave               → employee leave: balances + request form
 ```
+
+### Date & Time Formatting
+
+All dates display as `dd.mm.YYYY` (independent of browser locale). Time is 24h format. Both use custom segment-based input components:
+
+- **`<DatePicker>`** — three `<input type="number">` segments (DD / MM / YYYY), auto-advances, arrow key increment, emits `YYYY-MM-DD` ISO string
+- **`<TimePicker>`** — two `<input type="number">` segments (HH / MM), 24h, auto-advances, emits `HH:MM` string
+
+Helper functions in `apps/manager/src/lib/date.ts`:
+
+| Function | Output |
+|----------|--------|
+| `fmtDate(value)` | `dd.mm.YYYY` |
+| `fmtDateTime(value)` | `dd.mm.YYYY HH:MM` |
+| `fmtDateShort(value)` | `dd.mm` |
+| `fmtDateWithWeekday(value)` | `Mon, dd.mm.YYYY` |
+
+### Schedule Manager UI
+
+The weekly calendar (`/schedule`) renders an `employees × dates` table:
+
+- **Hover cell** → `+` button opens shift create modal pre-filled with employee + date
+- **Click shift chip** → edit modal (PATCH the shift)
+- **Employee row kebab** → "Delete future shifts" / "Delete all shifts" with inline confirmation
+- **Recurring shifts** — create form has checkbox → day-of-week selector + optional end date
+- **Copy week →** — duplicates all shifts in current view to next week
+- **Employee filter** — text input filters the employee rows
+- **Today highlight** — current date column has indigo background
+- **Color coding** — shift chip color reflects duration (gray < 6h, indigo 6–9h, amber > 9h)
+- **Total hrs** — rightmost column shows weekly hour sum per employee
+
+### Leave Manager UI
+
+The leave page (`/leave`) has two tabs:
+
+**Requests tab**
+- Filter bar: `pending / approved / rejected / all`
+- Cards show: leave type + color, status badge, employee name, date range with editable day count (pencil icon), balance snapshot (used / pending / total or ∞), optional notes, `Edited` badge
+- Managers can inline-edit `total_days` on any request (pencil → input → ✓) which adjusts the employee's balance delta immediately
+- Pending requests show approve/reject buttons with optional review notes input
+
+**Balances tab**
+- `employees × leave types` grid
+- Each cell shows `{used}d +{pending}p / {total}d` (or `∞` if no quota)
+- Click any cell → inline input to set quota, Enter to save
 
 ### Auth Client Flow
 
 `@hecto/api-client` ships `setupAuthInterceptors` which:
-1. Attaches `Authorization: Bearer <token>` to every outgoing request (when a token is in Zustand store)
-2. On a `401` response **from an authenticated request** — silently calls `/auth/refresh` and retries
-3. On a `401` from an **unauthenticated request** (no token was sent) — passes the original error through unchanged (preserves correct error messages for login/register)
-4. On a `401` from the refresh endpoint itself — calls `onAuthFailure()` (clears store, redirects to login)
+1. Attaches `Authorization: Bearer <token>` to every outgoing request
+2. On `401` from an authenticated request — silently calls `/auth/refresh` and retries
+3. On `401` from an unauthenticated request — passes the error through unchanged
+4. On `401` from the refresh endpoint itself — clears auth store and redirects to login
 
 ### State Management
 
 `useAuthStore` (Zustand with `persist`) stores:
-- `user: UserPublic | null` — persisted to `localStorage` (survives page reload)
-- `accessToken: string | null` — **in-memory only** (cleared on reload; refreshed silently via cookie)
+- `user: UserPublic | null` — persisted to `localStorage`
+- `accessToken: string | null` — in-memory only (refreshed silently via cookie on reload)
 - `isAuthenticated: boolean`
+
+## Queue & Email Architecture
+
+```
+HTTP Request
+    │
+    ▼
+AuthService / EmployeesService
+    │  tasksQueueService.enqueue(job)
+    ▼
+BullMQ Queue ──► Redis
+    │
+    ▼  (processed by worker container)
+TasksProcessor
+    │  mailService.send*(...)
+    ▼
+Nodemailer ──► SMTP (Mailhog in dev, real SMTP in prod)
+```
+
+**Job types**
+
+| Job | Payload | Description |
+|-----|---------|-------------|
+| `send-welcome-email` | `{ email, firstName }` | After successful registration |
+| `send-verification-email` | `{ email, code, firstName }` | Registration OTP |
+| `send-invite-email` | `{ email, inviterName, token }` | Employee invitation |
+
+## Leave Balance Logic
+
+Balance rows are upserted lazily (created on first request or quota assignment). The `adjustUsedDays` helper atomically reads and updates `used_days` + `pending_days`:
+
+- **Submit request** → `+pendingDays`
+- **Approve request** → `+usedDays`, `-pendingDays`
+- **Reject request** → `-pendingDays`
+- **Cancel pending** → `-pendingDays`
+- **Cancel approved** → `-usedDays`
+- **Edit days (any status)** → `±delta` to `usedDays` (approved) or `pendingDays` (pending)
+
+`total_days = 0` is the sentinel for "no quota set". The API maps this to `null` in `LeaveBalancePublic.totalDays` so the frontend can display ∞.
+
+`getBalancesForEmployee` always returns one entry per active leave type — if no DB record exists a virtual balance is synthesised (`totalDays: null, usedDays: 0, pendingDays: 0`).
 
 ## Build Pipeline
 
@@ -433,7 +614,7 @@ Stage 2 (builder): nx build backend (Webpack → main.js + worker.js)
 Stage 3 (runner):  Alpine + prod deps + main.js + worker.js
 ```
 
-The Dockerfile produces a single image used for both the `backend` and `worker` services in Docker Compose. The `worker` service uses `CMD ["node", "worker.js"]`.
+The Dockerfile produces a single image for both `backend` and `worker` services. The worker service uses `CMD ["node", "worker.js"]`.
 
 ## Environment Variables
 
@@ -442,70 +623,65 @@ The Dockerfile produces a single image used for both the `backend` and `worker` 
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
 | `JWT_ACCESS_SECRET` | Yes | — | Min 32 chars |
 | `JWT_REFRESH_SECRET` | Yes | — | Min 32 chars |
-| `EMAIL_VERIFICATION_SECRET` | Yes | — | Min 32 chars; used as HMAC key for OTP hashing |
+| `EMAIL_VERIFICATION_SECRET` | Yes | — | Min 32 chars; HMAC key for OTP hashing |
 | `JWT_ACCESS_EXPIRY` | No | `15m` | Access token lifetime |
 | `JWT_REFRESH_EXPIRY` | No | `7d` | Refresh token / session lifetime |
-| `REDIS_HOST` | No | `redis` (Docker) / `localhost` | Redis hostname |
+| `REDIS_HOST` | No | `redis` | Redis hostname |
 | `REDIS_PORT` | No | `6379` | Redis port |
 | `REDIS_PASSWORD` | No | — | Set in production |
 | `SMTP_PORT` | No | `1025` | SMTP port |
 | `SMTP_FROM` | No | `noreply@hectohr.io` | Sender address |
 | `SMTP_USER` / `SMTP_PASS` | No | — | Authenticated SMTP (production) |
-| `SMTP_SECURE` | No | — | Set `true` for port 465 TLS |
+| `SMTP_SECURE` | No | — | `true` for port 465 TLS |
 | `CORS_ORIGINS` | No | `http://localhost:4200` | Comma-separated allowed origins |
 | `PORT` | No | `3000` | HTTP server port |
 
-> **Note on `SMTP_HOST`**: Do **not** set this in `.env` when using Docker Compose — `docker-compose.yml` defaults it to the `mailhog` service name. For local development without Docker, set `SMTP_HOST=localhost`.
+> **Note on `SMTP_HOST`**: Do not set this in `.env` when using Docker Compose — `docker-compose.yml` defaults it to the `mailhog` service name. For local dev without Docker, set `SMTP_HOST=localhost`.
 
 ## Design Decisions
 
 ### Why Stateful JWT (Sessions Table)?
 
-A pure stateless JWT cannot be revoked. By storing `sessionId` in the database we can:
-- Instantly revoke individual sessions (logout from one device)
-- Force-logout all devices at once
-- Show users their active devices for security transparency
+A pure stateless JWT cannot be revoked. Storing `sessionId` in the database enables per-device logout, force-logout-all, and a visible active-sessions list for security transparency.
 
 ### Why BullMQ for Emails?
 
-Sending emails synchronously during registration would:
-- Increase registration latency by 200–500 ms per email
-- Block the HTTP response if the SMTP server is slow or unavailable
-- Cause registration to fail entirely if the mail queue is down
-
-BullMQ decouples delivery, provides automatic retries with exponential backoff, and keeps registration fast regardless of email latency.
+Sending emails synchronously during registration blocks the HTTP response if SMTP is slow and causes registration to fail if the mail server is down. BullMQ decouples delivery, provides automatic retries with exponential backoff, and keeps registration fast.
 
 ### Why Hash OTP Codes?
 
-A 6-digit code has only 10⁶ possibilities. If the database is breached, an attacker could trivially reverse-lookup stored plain codes. HMAC-SHA256 with a server-side secret (`EMAIL_VERIFICATION_SECRET`) means the code cannot be recovered without the key. Timing-safe comparison prevents side-channel attacks on the comparison itself.
+A 6-digit code has only 10⁶ possibilities. Storing raw codes risks brute-force or breach-based recovery. HMAC-SHA256 with a server-side secret means the code cannot be recovered without the key. Timing-safe comparison prevents side-channel attacks.
 
-### Why pnpm?
+### Why Custom DatePicker / TimePicker?
 
-- **Faster**: Linked packages, no duplication
-- **Safer**: Prevents hidden dependencies
-- **Monorepo-friendly**: Built-in workspace support
+`<input type="date">` and `<input type="time">` render in the browser's locale (12h format, locale-specific date order). Building custom segment inputs (separate `<input type="number">` for each field) gives full control over display format (`dd.mm.YYYY`, 24h time) on all browsers.
 
-### Why Nx?
+### Why `total_days = 0` as Sentinel for No Quota?
 
-- **Task caching**: Rebuild only changed projects
-- **Dependency graph**: Auto-run dependent tasks
-- **Scalability**: Foundation for 10+ packages
+A `NULL` `total_days` would require either a nullable column with special handling in every query or a separate `has_quota` flag. Using `0` as a sentinel keeps the column `NOT NULL`, works with Drizzle's numeric type, and is easy to interpret: `0 → no limit set`, `> 0 → quota`. The API translates this to `null` in the public DTO so clients only see a clean nullable number.
+
+### Why pnpm + Nx?
+
+- **pnpm**: linked packages, no duplication, safer hidden-dependency prevention
+- **Nx**: task caching means only changed projects rebuild; the dependency graph runs tasks in the correct order
 
 ### Why SWC (dev) + Webpack (prod)?
 
-- **Dev**: SWC is 10x faster for quick feedback
-- **Prod**: Webpack tree-shakes and produces a single optimised bundle
+SWC is ~10× faster than the TypeScript compiler for development feedback. Webpack tree-shakes and produces a single optimised bundle for production.
 
 ## Troubleshooting Architecture Issues
 
-**Q: Why does TypeScript complain about missing `@hecto/*` modules?**
-A: Run `pnpm nx sync` to update TypeScript project references. The `@hecto/*` paths in `tsconfig.base.json` point directly to source `.ts` files.
+**Q: TypeScript complains about missing `@hecto/*` modules?**
+A: Run `pnpm nx sync` to update TypeScript project references.
 
 **Q: How do I generate and apply a new database migration?**
-A: Edit the schema in `libs/backend/database/src/lib/schema/`, run `pnpm db:generate`, then `pnpm db:migrate`.
+A: Edit a schema file in `libs/backend/database/src/lib/schema/`, run `pnpm db:generate`, then `pnpm db:migrate`.
 
 **Q: How do I inspect the database visually?**
-A: Run `pnpm db:studio` to open Drizzle Studio in your browser.
+A: Run `pnpm db:studio` to open Drizzle Studio.
 
 **Q: How do I view emails sent during development?**
-A: Open `http://localhost:8025` — Mailhog captures all SMTP traffic and shows it in a web UI.
+A: Open `http://localhost:8025` — Mailhog captures all SMTP traffic.
+
+**Q: How do I add a new leave type?**
+A: In the future a UI will exist for this. Currently: insert a row into `leave_types` with the desired `organization_id`, or update `seed.service.ts` and re-run `mise run seed`.

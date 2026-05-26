@@ -1,22 +1,19 @@
-import nx from "@nx/eslint-plugin";
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import baseConfig from "../../../eslint.config.mjs";
 
 export default [
-    ...nx.configs["flat/react"],
     ...baseConfig,
     {
-        files: [
-            "**/*.ts",
-            "**/*.tsx",
-            "**/*.js",
-            "**/*.jsx"
-        ],
-        // Override or add rules here
-        rules: {}
+        files: ["**/*.ts", "**/*.tsx"],
+        languageOptions: {
+            parser: tsParser,
+            parserOptions: { ecmaFeatures: { jsx: true } },
+        },
+        plugins: { '@typescript-eslint': tsPlugin },
+        rules: {},
     },
     {
-        ignores: [
-            "**/out-tsc"
-        ]
-    }
+        ignores: ["**/out-tsc"],
+    },
 ];

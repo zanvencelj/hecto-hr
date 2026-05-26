@@ -12,8 +12,21 @@ const optionalName = z
   .optional()
   .transform((v) => v || undefined);
 
+export const companySchema = z.object({
+  organizationName: z
+    .string()
+    .trim()
+    .min(2, 'Company name must be at least 2 characters')
+    .max(255, 'Company name is too long'),
+});
+
 export const registerSchema = z
   .object({
+    organizationName: z
+      .string()
+      .trim()
+      .min(2, 'Company name must be at least 2 characters')
+      .max(255, 'Company name is too long'),
     email: z.string().min(1, 'Email is required').email('Invalid email address'),
     firstName: optionalName,
     lastName: optionalName,
@@ -30,5 +43,6 @@ export const registerSchema = z
   });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export type CompanyInput = z.infer<typeof companySchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type RegisterFormInput = z.input<typeof registerSchema>;
