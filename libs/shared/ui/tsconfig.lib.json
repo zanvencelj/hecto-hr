@@ -10,6 +10,7 @@
     ],
     "rootDir": "src",
     "jsx": "react-jsx",
+    "lib": ["es2022", "dom"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo"

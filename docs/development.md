@@ -181,7 +181,7 @@ Pushes schema changes directly to the database without creating migration files.
 mise run seed
 ```
 
-Inserts sample users with password `hecto123`. Run this after a fresh migration or after resetting the database.
+Inserts sample users (password `hecto123`) and default leave types (Sick Leave, Holiday Leave). Run this after a fresh migration or after resetting the database.
 
 ## File Structure for Development
 

@@ -41,6 +41,15 @@
     },
     {
       "path": "./libs/backend/storage"
+    },
+    {
+      "path": "./libs/backend/employees"
+    },
+    {
+      "path": "./libs/backend/shifts"
+    },
+    {
+      "path": "./libs/backend/leave"
     }
   ]
 }

@@ -5,6 +5,7 @@ import type { Transporter } from 'nodemailer';
 import { welcomeEmailHtml } from './templates/welcome.template';
 import { verificationCodeEmailHtml } from './templates/verification-code.template';
 import { passwordResetEmailHtml } from './templates/password-reset.template';
+import { invitationEmailHtml } from './templates/invitation.template';
 
 @Injectable()
 export class MailService {
@@ -55,5 +56,21 @@ export class MailService {
       html: passwordResetEmailHtml(resetLink, firstName),
     });
     this.logger.log(`Password reset email sent → ${email}`);
+  }
+
+  async sendInvitationEmail(
+    email: string,
+    firstName: string | null,
+    inviteLink: string,
+    organizationName: string,
+    inviterName: string | null,
+  ): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.from,
+      to: email,
+      subject: `You're invited to join ${organizationName} on HectoHR`,
+      html: invitationEmailHtml(inviteLink, firstName, organizationName, inviterName),
+    });
+    this.logger.log(`Invitation email sent → ${email}`);
   }
 }

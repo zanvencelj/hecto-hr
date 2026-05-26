@@ -7,6 +7,16 @@ export const loggerConfig: Params = {
   pinoHttp: {
     level: isProduction ? 'info' : 'debug',
 
+    serializers: {
+      req: (req: { id: string; method: string; url: string }) => ({
+        method: req.method,
+        url: req.url,
+      }),
+      res: (res: { statusCode: number }) => ({
+        statusCode: res.statusCode,
+      }),
+    },
+
     ...(isProduction
       ? {
           formatters: {
@@ -17,16 +27,6 @@ export const loggerConfig: Params = {
             bindings: () => ({}),
           },
           timestamp: () => `,"time":"${new Date().toISOString()}"`,
-          serializers: {
-            req: (req: { id: string; method: string; url: string }) => ({
-              id: req.id,
-              method: req.method,
-              url: req.url,
-            }),
-            res: (res: { statusCode: number }) => ({
-              statusCode: res.statusCode,
-            }),
-          },
           redact: {
             paths: [
               'req.headers.authorization',

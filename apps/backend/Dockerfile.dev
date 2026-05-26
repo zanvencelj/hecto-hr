@@ -14,6 +14,9 @@ COPY libs/backend/mail/package.json libs/backend/mail/package.json
 COPY libs/backend/queue/package.json libs/backend/queue/package.json
 COPY libs/backend/storage/package.json libs/backend/storage/package.json
 COPY libs/backend/users/package.json libs/backend/users/package.json
+COPY libs/backend/employees/package.json libs/backend/employees/package.json
+COPY libs/backend/shifts/package.json libs/backend/shifts/package.json
+COPY libs/backend/leave/package.json libs/backend/leave/package.json
 COPY libs/shared/types/package.json libs/shared/types/package.json
 RUN pnpm install --frozen-lockfile
 

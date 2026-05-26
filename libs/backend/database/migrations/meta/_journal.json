@@ -36,6 +36,20 @@
       "when": 1777739285746,
       "tag": "0004_unique_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777805986790,
+      "tag": "0005_closed_katie_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779732498682,
+      "tag": "0006_keen_terror",
+      "breakpoints": true
     }
   ]
 }

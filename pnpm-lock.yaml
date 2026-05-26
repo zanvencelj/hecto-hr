@@ -420,9 +420,15 @@ importers:
         specifier: '*'
         version: 8.20.0
 
+  libs/backend/employees: {}
+
+  libs/backend/leave: {}
+
   libs/backend/mail: {}
 
   libs/backend/queue: {}
+
+  libs/backend/shifts: {}
 
   libs/backend/storage: {}
 
