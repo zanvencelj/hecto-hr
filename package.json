@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "nx": "nx",
     "start:main": "nx run-many --target=serve -p manager",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

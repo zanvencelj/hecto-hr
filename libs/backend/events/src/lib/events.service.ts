@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import type { WorkEvent, EventChangeRequest } from '@hecto/database';
 import type {
   WorkEventPublic,
