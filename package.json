@@ -99,7 +99,10 @@
       "less",
       "nx",
       "unrs-resolver"
-    ]
+    ],
+    "patchedDependencies": {
+      "react-native-css-interop@0.2.4": "patches/react-native-css-interop@0.2.4.patch"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

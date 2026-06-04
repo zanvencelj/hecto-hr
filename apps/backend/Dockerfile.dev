@@ -17,7 +17,10 @@ COPY libs/backend/users/package.json libs/backend/users/package.json
 COPY libs/backend/employees/package.json libs/backend/employees/package.json
 COPY libs/backend/shifts/package.json libs/backend/shifts/package.json
 COPY libs/backend/leave/package.json libs/backend/leave/package.json
+COPY libs/backend/events/package.json libs/backend/events/package.json
+COPY libs/backend/reports/package.json libs/backend/reports/package.json
 COPY libs/shared/types/package.json libs/shared/types/package.json
+COPY patches/ patches/
 RUN pnpm install --frozen-lockfile
 
 # Tsconfig files are needed by @swc-node/register for path resolution

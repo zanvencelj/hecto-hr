@@ -50,6 +50,12 @@
     },
     {
       "path": "./libs/backend/leave"
+    },
+    {
+      "path": "./libs/backend/events"
+    },
+    {
+      "path": "./libs/backend/reports"
     }
   ]
 }

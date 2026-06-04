@@ -19,6 +19,8 @@ import { ShiftsService } from './shifts.service';
 import { CreateShiftDto } from './dto/create-shift.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
 import { CreateShiftBreakDto } from './dto/create-shift-break.dto';
+import { SetAvailabilityDto } from './dto/set-availability.dto';
+import type { EmployeeAvailability } from '@hecto/database';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -103,5 +105,43 @@ export class ShiftsController {
     @CurrentUser() user: AccessTokenPayload,
   ): Promise<void> {
     return this.shiftsService.deleteBreak(shiftId, breakId, user);
+  }
+
+  @Get('open')
+  getOpenShifts(
+    @CurrentUser() user: AccessTokenPayload,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ): Promise<ShiftPublic[]> {
+    return this.shiftsService.getOpenShifts(user, from, to);
+  }
+
+  @Post(':id/claim')
+  @HttpCode(HttpStatus.OK)
+  claimShift(
+    @Param('id') id: string,
+    @CurrentUser() user: AccessTokenPayload,
+  ): Promise<ShiftPublic> {
+    return this.shiftsService.claimShift(id, user);
+  }
+
+  @Get('availability/me')
+  getMyAvailability(@CurrentUser() user: AccessTokenPayload): Promise<EmployeeAvailability[]> {
+    return this.shiftsService.getMyAvailability(user);
+  }
+
+  @Post('availability/me')
+  @HttpCode(HttpStatus.OK)
+  setAvailability(
+    @Body() dto: SetAvailabilityDto,
+    @CurrentUser() user: AccessTokenPayload,
+  ): Promise<EmployeeAvailability> {
+    return this.shiftsService.setAvailability(user, dto);
+  }
+
+  @Get('availability/org')
+  @Roles('admin', 'hr', 'manager')
+  getOrgAvailability(@CurrentUser() user: AccessTokenPayload): Promise<EmployeeAvailability[]> {
+    return this.shiftsService.getOrgAvailability(user);
   }
 }

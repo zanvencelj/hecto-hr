@@ -1,6 +1,6 @@
 [tools]
 node = "22"
-pnpm = "latest"
+pnpm = "10.11.0"
 pre-commit = "latest"
 
 # ---- Docker Compose ----

@@ -17,11 +17,13 @@ function useNavItems(): NavItem[] {
       { to: '/employees', label: 'Employees' },
       { to: '/schedule', label: 'Schedule' },
       { to: '/leave', label: 'Leave' },
+      { to: '/change-requests', label: 'Change Requests' },
     ];
   }
   return [
     { to: '/my-schedule', label: 'My Schedule' },
     { to: '/my-leave', label: 'My Leave' },
+    { to: '/my-history', label: 'My History' },
   ];
 }
 

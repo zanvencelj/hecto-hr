@@ -1,6 +1,8 @@
 import {
   Injectable,
   Logger,
+  Inject,
+  forwardRef,
   UnauthorizedException,
   ForbiddenException,
   ConflictException,
@@ -59,7 +61,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => UsersService)) private readonly usersService: UsersService,
     private readonly sessionsRepository: SessionsRepository,
     private readonly emailVerificationRepository: EmailVerificationRepository,
     private readonly organizationsRepository: OrganizationsRepository,
@@ -342,8 +344,9 @@ export class AuthService {
     return { accessToken };
   }
 
-  async logout(req: Request, res: Response): Promise<void> {
-    const token = (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
+  async logout(req: Request, res: Response, bodyToken?: string): Promise<void> {
+    const token =
+      bodyToken ?? (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
     if (token) {
       try {
         const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(token, {
@@ -351,14 +354,15 @@ export class AuthService {
         });
         await this.sessionsRepository.deactivate(payload.sessionId);
       } catch {
-        // Expired or invalid refresh token — cookies are still cleared below
+        // Expired or invalid refresh token — session cleared best-effort
       }
     }
     this.clearAuthCookies(res);
   }
 
-  async logoutAll(req: Request, res: Response): Promise<void> {
-    const token = (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
+  async logoutAll(req: Request, res: Response, bodyToken?: string): Promise<void> {
+    const token =
+      bodyToken ?? (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
     if (token) {
       try {
         const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(token, {
@@ -366,7 +370,7 @@ export class AuthService {
         });
         await this.sessionsRepository.deactivateAllForUser(payload.sub);
       } catch {
-        // Expired or invalid refresh token — cookies are still cleared below
+        // Expired or invalid refresh token — session cleared best-effort
       }
     }
     this.clearAuthCookies(res);

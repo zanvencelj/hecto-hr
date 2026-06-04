@@ -11,4 +11,8 @@ export * from './shift-breaks.schema';
 export * from './leave-types.schema';
 export * from './leave-balances.schema';
 export * from './leave-requests.schema';
+export * from './work-events.schema';
+export * from './event-change-requests.schema';
+export * from './employee-availability.schema';
+export * from './push-tokens.schema';
 export * from './database.helpers';

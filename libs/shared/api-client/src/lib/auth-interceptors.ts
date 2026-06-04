@@ -9,6 +9,8 @@ export interface AuthInterceptorConfig {
   getAccessToken: () => string | null;
   onTokenRefreshed: (accessToken: string) => void;
   onAuthFailure: () => void;
+  /** Mobile: supply stored refresh token to include in refresh request body (may be async) */
+  getRefreshToken?: () => string | null | Promise<string | null>;
   refreshEndpoint?: string;
   /** Endpoints that should never trigger a token refresh retry on 401 */
   noRetryEndpoints?: string[];
@@ -22,6 +24,7 @@ export function setupAuthInterceptors(
     getAccessToken,
     onTokenRefreshed,
     onAuthFailure,
+    getRefreshToken,
     refreshEndpoint = '/auth/refresh',
     noRetryEndpoints = ['/auth/logout', '/auth/logout-all'],
   } = config;
@@ -88,8 +91,10 @@ export function setupAuthInterceptors(
       isRefreshing = true;
 
       try {
+        const refreshToken = (await getRefreshToken?.()) ?? null;
         const { data } = await client.post<{ accessToken: string }>(
           refreshEndpoint,
+          refreshToken ? { refreshToken } : undefined,
         );
         onTokenRefreshed(data.accessToken);
         processQueue(null, data.accessToken);

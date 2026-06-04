@@ -22,6 +22,12 @@
   ],
   "references": [
     {
+      "path": "../../libs/backend/events/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/reports/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/backend/leave/tsconfig.lib.json"
     },
     {
