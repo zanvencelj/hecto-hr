@@ -437,7 +437,7 @@ If it fails, check logs for startup errors. Increase `start_period` in `docker-c
 docker compose down -v   # WARNING: destroys all data
 mise run up
 pnpm db:migrate
-mise run seed            # optional: re-seed
+pnpm seed            # optional: re-seed
 ```
 
 ### Build fails in CI

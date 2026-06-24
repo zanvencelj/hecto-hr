@@ -6,37 +6,48 @@ Complete list of all available tasks and commands.
 
 | Task | Command | Purpose |
 |------|---------|---------|
-| Start backend (dev) | `mise run dev` | Run with hot-reload (file changes auto-restart) |
-| Start frontend | `pnpm nx serve manager` | React app at `localhost:4200` (Vite HMR) |
-| Start worker (local) | `pnpm nx serve worker` | BullMQ email processor (auto-starts in Docker) |
-| Run tests | `mise run test` | All unit tests (all projects) |
-| Backend tests (watch) | `mise run test-backend` | Backend tests in watch mode |
-| Lint code | `mise run lint` | Run ESLint on all projects |
-| Type-check | `mise run typecheck` | TypeScript type checking |
-| Full check | `mise run check` | lint + typecheck + test (all) |
-| Build all | `mise run build` | Production build (backend + worker bundles) |
-| Docker up | `mise run up` | Start all 5 services (Postgres, Redis, Mailhog, backend, worker) |
+| Start backend (dev) | `pnpm dev:backend` | Run with hot-reload (file changes auto-restart) |
+| Start backend worker | `pnpm dev:worker` | BullMQ email processor (auto-starts in Docker) |
+| Start manager frontend | `pnpm dev:manager` | React app at `localhost:4200` (Vite HMR) |
+| Start both (backend + manager) | `pnpm dev` | Backend + manager in parallel |
+| Start mobile app | `pnpm mobile` | Expo dev server (Expo Go or simulator) |
+| Mobile Android | `pnpm mobile:android` | Open on Android simulator |
+| Mobile iOS | `pnpm mobile:ios` | Open on iOS simulator |
+| Build mobile (Android) | `pnpm mobile:build:android` | EAS cloud build for Android |
+| Build mobile (iOS) | `pnpm mobile:build:ios` | EAS cloud build for iOS |
+| Run tests | `pnpm test` | All unit tests (all projects) |
+| Test affected | `pnpm test:affected` | Tests for changed projects only |
+| Lint code | `pnpm lint` | Run ESLint on all projects |
+| Lint fix | `pnpm lint:fix` | Auto-fix ESLint issues |
+| Type-check | `pnpm typecheck` | TypeScript type checking |
+| Build all | `pnpm build` | Production build (backend + libs) |
+| Build backend | `pnpm build:backend` | Webpack build (backend only) |
+| Docker up | `mise run up` | Start all services (Postgres, Redis, Mailhog, backend, worker) |
 | Docker down | `mise run down` | Stop Docker Compose containers |
+| Clear Nx cache | `pnpm clean:cache` | `nx reset` — clears Nx daemon + cache |
+| Clear dist | `pnpm clean:dist` | Remove all `dist/` directories |
+| Full clean | `pnpm clean:all` | Cache + dist + node_modules |
+| Nx graph | `pnpm graph` | Visual dependency graph |
 | Generate migration | `pnpm db:generate` | Create SQL migration from schema changes |
 | Apply migrations | `pnpm db:migrate` | Apply pending migrations to database |
 | Database UI | `pnpm db:studio` | Open Drizzle Studio visual browser |
 | Push schema (dev) | `pnpm db:push` | Push schema without migration file (dev only) |
-| Seed database | `mise run seed` | Insert sample users (password: `hecto123`) |
+| Seed database | `pnpm seed` | Insert sample users (password: `hecto123`) |
 | View emails | `open http://localhost:8025` | Mailhog web UI (captured dev emails) |
 
 ## Detailed Commands
 
 ### Development
 
-#### `mise run dev` — Start Backend with Hot-Reload
+#### `pnpm dev:backend` — Start Backend with Hot-Reload
 
 ```bash
-mise run dev
+pnpm dev:backend
 ```
 
 **Equivalent to**:
 ```bash
-pnpm nx serve backend
+pnpm nx run backend:serve
 ```
 
 **What it does**:
@@ -60,7 +71,7 @@ pnpm nx serve backend
 **Options**:
 ```bash
 # Use a different port
-PORT=3001 mise run dev
+PORT=3001 pnpm dev:backend
 
 # Run without hot-reload (traditional node execution)
 # (Not directly supported; edit mise.toml to change)
@@ -68,10 +79,10 @@ PORT=3001 mise run dev
 
 ### Testing
 
-#### `mise run test` — Run All Tests
+#### `pnpm test` — Run All Tests
 
 ```bash
-mise run test
+pnpm test
 ```
 
 **Equivalent to**:
@@ -94,10 +105,10 @@ Test Suites: 1 passed, 1 total
 ...
 ```
 
-#### `mise run test-backend` — Backend Tests in Watch Mode
+#### `pnpm nx test backend --watch` — Backend Tests in Watch Mode
 
 ```bash
-mise run test-backend
+pnpm nx test backend --watch
 ```
 
 **Equivalent to**:
@@ -141,10 +152,10 @@ pnpm nx test backend -- -t "should return"
 
 ### Code Quality
 
-#### `mise run lint` — Lint All Code
+#### `pnpm lint` — Lint All Code
 
 ```bash
-mise run lint
+pnpm lint
 ```
 
 **Equivalent to**:
@@ -180,10 +191,10 @@ pnpm nx lint backend
 pnpm exec prettier --write "apps/backend/src/**/*.ts"
 ```
 
-#### `mise run typecheck` — Type-Check All Projects
+#### `pnpm typecheck` — Type-Check All Projects
 
 ```bash
-mise run typecheck
+pnpm typecheck
 ```
 
 **Equivalent to**:
@@ -214,10 +225,10 @@ pnpm nx typecheck backend
 pnpm nx affected -t typecheck
 ```
 
-#### `mise run check` — Full Quality Check
+#### `pnpm lint && pnpm typecheck` — Full Quality Check
 
 ```bash
-mise run check
+pnpm lint && pnpm typecheck
 ```
 
 **Equivalent to**:
@@ -245,10 +256,10 @@ pnpm nx run-many -t lint typecheck test
 
 ### Building
 
-#### `mise run build` — Build All Projects
+#### `pnpm build` — Build All Projects
 
 ```bash
-mise run build
+pnpm build
 ```
 
 **Equivalent to**:
@@ -350,10 +361,10 @@ docker compose down -v
 
 ### Frontend
 
-#### `pnpm nx serve manager` — Start React Frontend
+#### `pnpm dev:manager` — Start React Frontend
 
 ```bash
-pnpm nx serve manager
+pnpm dev:manager
 ```
 
 **What it does**:
@@ -362,13 +373,43 @@ pnpm nx serve manager
 - Instant hot-module replacement (HMR) on file changes
 - Proxies `/api` requests to the backend at `localhost:3000`
 
-#### `pnpm nx serve worker` — Start BullMQ Worker (Local Dev)
+#### `pnpm dev:worker` — Start BullMQ Worker (Local Dev)
 
 ```bash
-pnpm nx serve worker
+pnpm dev:worker
 ```
 
 Starts the email job processor locally. Required for email delivery when not using Docker. The worker connects to Redis (`REDIS_HOST=localhost` by default in dev) and processes `send-verification-email` and `send-welcome-email` jobs.
+
+### Mobile App
+
+#### `pnpm mobile` — Start Expo Dev Server
+
+```bash
+pnpm mobile
+```
+
+Starts the Expo Metro bundler. Press `a` to open on Android, `i` for iOS, or scan the QR code with Expo Go.
+
+**Options**:
+```bash
+pnpm mobile:android   # open directly on Android simulator
+pnpm mobile:ios       # open directly on iOS simulator
+```
+
+#### `pnpm mobile:build:android` / `pnpm mobile:build:ios` — EAS Cloud Build
+
+```bash
+pnpm mobile:build:android   # triggers EAS Build for Android
+pnpm mobile:build:ios       # triggers EAS Build for iOS
+```
+
+Requires EAS CLI login (`eas login`) and a configured `eas.json`. Builds run in the cloud; output is a downloadable APK/IPA.
+
+**Build profiles** (from `apps/employee/eas.json`):
+- `development` — debug build with dev client
+- `preview` — internal distribution build
+- `production` — store-ready build
 
 ### Database
 
@@ -423,10 +464,10 @@ Pushes the schema directly to the database without generating migration files. U
 
 ### Seeding
 
-#### `mise run seed` — Seed Database
+#### `pnpm seed` — Seed Database
 
 ```bash
-mise run seed
+pnpm seed
 ```
 
 **What it does**:
@@ -596,19 +637,19 @@ docker push my-registry.com/hectohr:latest
 mise run up
 
 # Terminal 2 — backend (hot-reload)
-mise run dev
+pnpm dev:backend
 
-# Terminal 3 — frontend (Vite HMR)
-pnpm nx serve manager
+# Terminal 3 — manager frontend (Vite HMR)
+pnpm dev:manager
 
-# Terminal 4 — optional: backend tests in watch mode
-mise run test-backend
+# Terminal 4 — mobile app (Expo)
+pnpm mobile          # then press 'a' (Android) or 'i' (iOS)
 
-# Open http://localhost:4200 (frontend)
+# Open http://localhost:4200 (manager frontend)
 # Open http://localhost:8025 (Mailhog — view verification emails)
 
 # Before committing
-mise run check
+pnpm lint && pnpm typecheck
 
 git add .
 git commit -m "feat: new feature"
@@ -631,10 +672,10 @@ pnpm nx test backend -- --testPathPattern=app.service
 
 ```bash
 # 1. Run full quality check
-mise run check
+pnpm lint && pnpm typecheck
 
 # 2. Build locally
-mise run build
+pnpm build
 
 # 3. Verify output
 ls -la apps/backend/dist/
@@ -656,13 +697,13 @@ docker push my-registry.com/hectohr:latest
 
 ```bash
 # 1. See what's wrong
-mise run lint
+pnpm lint
 
 # 2. Auto-fix
 pnpm nx lint backend -- --fix
 
 # 3. Verify
-mise run lint
+pnpm lint
 ```
 
 ## Command Flags & Options

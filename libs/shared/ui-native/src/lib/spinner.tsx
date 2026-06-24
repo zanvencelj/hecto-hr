@@ -1,6 +1,6 @@
 import { ActivityIndicator, type ActivityIndicatorProps } from 'react-native';
 
-export interface SpinnerProps extends ActivityIndicatorProps {
+export interface SpinnerProps extends Omit<ActivityIndicatorProps, 'size'> {
   size?: 'sm' | 'md' | 'lg';
 }
 

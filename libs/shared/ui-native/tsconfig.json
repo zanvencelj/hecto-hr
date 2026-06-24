@@ -9,8 +9,12 @@
     "strict": true,
     "noEmit": true,
     "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
     "skipLibCheck": true,
-    "allowJs": true
+    "allowJs": true,
+    "types": ["nativewind/types"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"]

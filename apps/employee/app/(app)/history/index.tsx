@@ -1,16 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Modal, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Modal } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { DatePicker, TimePicker } from '@/components/DatePicker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@hecto/ui-native';
-import { Badge } from '@hecto/ui-native';
 import { Spinner } from '@hecto/ui-native';
 import { Button } from '@hecto/ui-native';
 import { FormField } from '@hecto/ui-native';
-import type { WorkEventPublic, WorkEventType, EventChangeRequestPublic, ChangeRequestType } from '@hecto/shared-types';
+import type { WorkEventPublic, WorkEventType, ChangeRequestType } from '@hecto/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { getMyEvents } from '@/services/events.service';
 import { getMyShifts } from '@/services/shifts.service';
@@ -129,7 +127,7 @@ function ChangeRequestForm({ targetDate, targetEvent, initialType, onClose, onSu
   const [occurredAt, setOccurredAt] = useState<Date>(
     targetEvent ? new Date(targetEvent.occurredAt) : new Date(targetDate),
   );
-  const [reason, setReason] = useState('');
+  const [reason] = useState('');
 
   const handleSubmit = () => {
     if (requestType === 'delete') {

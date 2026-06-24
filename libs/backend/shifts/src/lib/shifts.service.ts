@@ -47,7 +47,7 @@ export class ShiftsService {
     currentUser: AccessTokenPayload,
   ): Promise<ShiftPublic> {
     const recurringShift = await this.shiftsRepo.createRecurringShift({
-      userId: dto.userId,
+      userId: dto.userId!,
       organizationId: currentUser.organizationId,
       daysOfWeek: dto.recurringDays!,
       startTime: dto.startTime,

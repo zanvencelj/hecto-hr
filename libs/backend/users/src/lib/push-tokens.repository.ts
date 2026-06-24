@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import {
   DATABASE_CONNECTION,
   type Database,
@@ -38,7 +38,6 @@ export class PushTokensRepository {
 
   async findByUserIds(userIds: string[]): Promise<PushToken[]> {
     if (userIds.length === 0) return [];
-    const { inArray } = await import('drizzle-orm');
     return this.db.select().from(pushTokens).where(inArray(pushTokens.userId, userIds));
   }
 }

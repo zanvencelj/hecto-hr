@@ -17,6 +17,10 @@ run = "docker compose down"
 description = "Build all services with Docker Compose"
 run = "docker compose build"
 
+[tasks.logs]
+description = "Attach to the specified service logs"
+run = "docker compose logs -f"
+
 # ---- Quality ----
 
 [tasks.test]

@@ -1,11 +1,10 @@
-import { Body, Controller, Delete, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import type { AccessTokenPayload } from '@hecto/shared-types';
-import { JwtAuthGuard, CurrentUser } from '@hecto/auth';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { PushTokensRepository } from './push-tokens.repository';
 import { RegisterPushTokenDto } from './dto/register-push-token.dto';
 
 @Controller('users/push-tokens')
-@UseGuards(JwtAuthGuard)
 export class PushTokensController {
   constructor(private readonly pushTokensRepo: PushTokensRepository) {}
 

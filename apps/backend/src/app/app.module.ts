@@ -6,7 +6,7 @@ import { TerminusModule } from '@nestjs/terminus';
 import { LoggerModule } from 'nestjs-pino';
 import { DatabaseModule } from '@hecto/database';
 import { UsersModule } from '@hecto/users';
-import { AuthModule } from '@hecto/auth';
+import { AuthModule, JwtAuthGuard } from '@hecto/auth';
 import { QueueModule } from '@hecto/queue';
 import { StorageModule } from '@hecto/storage';
 import { EmployeesModule } from '@hecto/employees';
@@ -50,6 +50,10 @@ import { validateEnv } from '../env.validation';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

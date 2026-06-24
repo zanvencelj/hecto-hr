@@ -13,12 +13,12 @@ mise run up
 
 **Terminal 2 - Backend (auto-restart on file changes)**:
 ```bash
-mise run dev
+pnpm dev:backend
 ```
 
-Or manually:
+Or via Nx directly:
 ```bash
-pnpm nx serve backend
+pnpm nx run backend:serve
 ```
 
 This starts the backend with:
@@ -26,9 +26,9 @@ This starts the backend with:
 - `@swc-node/register` (transpiles TypeScript on-the-fly)
 - `SWCRC=true` (enables decorator support in SWC)
 
-**Terminal 3 - Frontend**:
+**Terminal 3 - Manager Frontend**:
 ```bash
-pnpm nx serve manager
+pnpm dev:manager
 ```
 
 The React app is available at `http://localhost:4200`. Vite provides instant hot-module replacement (HMR) — UI changes appear in the browser without a full reload.
@@ -37,14 +37,21 @@ The React app is available at `http://localhost:4200`. Vite provides instant hot
 
 In Docker Compose the worker starts automatically alongside the backend. For local development without Docker, start it in a separate terminal:
 ```bash
-pnpm nx serve worker
+pnpm dev:worker
 ```
 
 The worker connects to Redis and processes BullMQ jobs (email sending). Without the worker running, registration emails won't be delivered.
 
-**Terminal 5 - Optional: Backend tests in watch mode**:
+**Terminal 5 - Mobile App (optional)**:
 ```bash
-mise run test-backend
+pnpm mobile
+```
+
+Starts the Expo Metro bundler. Press `a` for Android, `i` for iOS, or scan the QR code with Expo Go on a physical device. Requires a running backend (Terminal 2).
+
+**Terminal 6 - Optional: Backend tests in watch mode**:
+```bash
+pnpm nx test backend --watch
 ```
 
 ### Making Changes
@@ -122,7 +129,7 @@ Server ready (~200-300ms)
 If a change doesn't hot-reload automatically, restart manually:
 ```bash
 # Kill the dev process (Ctrl+C) and restart
-mise run dev
+pnpm dev:backend
 ```
 
 ## Viewing Emails in Development
@@ -178,7 +185,7 @@ Pushes schema changes directly to the database without creating migration files.
 ### Seed the Database
 
 ```bash
-mise run seed
+pnpm seed
 ```
 
 Inserts sample users (password `hecto123`) and default leave types (Sick Leave, Holiday Leave). Run this after a fresh migration or after resetting the database.
@@ -287,7 +294,7 @@ libs/
 Run tests in watch mode (re-run on file changes):
 
 ```bash
-mise run test-backend
+pnpm nx test backend --watch
 ```
 
 Or run once:
@@ -416,7 +423,7 @@ export class AppModule {}
 Check code style (ESLint):
 
 ```bash
-mise run lint
+pnpm lint
 
 # Fix auto-fixable issues
 pnpm nx lint backend -- --fix
@@ -429,7 +436,7 @@ Issues are caught by git hooks if configured (optional).
 Verify TypeScript types:
 
 ```bash
-mise run typecheck
+pnpm typecheck
 
 # Or for just the backend
 pnpm nx typecheck backend
@@ -440,7 +447,7 @@ pnpm nx typecheck backend
 Run all quality checks (lint + typecheck + test):
 
 ```bash
-mise run check
+pnpm lint && pnpm typecheck
 ```
 
 ## Common Patterns
@@ -603,7 +610,7 @@ lsof -ti:3000  # macOS/Linux
 ```bash
 # Restart the dev process
 Ctrl+C
-mise run dev
+pnpm dev:backend
 ```
 
 ### Tests fail
@@ -630,6 +637,62 @@ When a user submits the registration form:
 4. Enter the code in the frontend — on success, the account is created and the user is logged in
 
 To test resend behavior: wait 30 seconds on the verification screen and click "Resend Code". A new code appears in Mailhog. The previous code is invalidated.
+
+## Mobile App Development
+
+### Running the Employee App
+
+```bash
+pnpm mobile            # start Expo dev server
+# press 'a' → Android simulator
+# press 'i' → iOS simulator
+# scan QR   → physical device with Expo Go
+```
+
+The app talks to `http://localhost:3000` by default. On a physical device or Android emulator, update `apps/employee/src/lib/api.ts` to point to your machine's LAN IP.
+
+### File Structure
+
+```
+apps/employee/
+├── app/
+│   ├── _layout.tsx          # Root layout — loads fonts, sets up QueryClient, auth check
+│   ├── (auth)/login.tsx     # Login form
+│   └── (app)/
+│       ├── _layout.tsx      # Bottom tab navigator (shifts, leaves, events, history)
+│       ├── shifts/          # View own upcoming shifts
+│       ├── leaves/          # Leave balances + request form
+│       ├── events/          # Clock in/out, log work events
+│       └── history/         # Work history timeline
+├── src/
+│   ├── services/            # Typed API calls (shifts, leaves, events, auth…)
+│   ├── stores/
+│   │   ├── auth.store.ts    # Zustand + expo-secure-store (token persisted securely)
+│   │   └── preferences.store.ts  # UI preferences (event button order)
+│   └── components/
+│       └── DatePicker.tsx   # Native date picker wrapper
+└── eas.json                 # EAS Build profiles
+```
+
+### Shared Libraries on Mobile
+
+The mobile app uses the same `@hecto/api-client`, `@hecto/shared-types`, and `@hecto/schemas` as the web app. It has its own UI library `@hecto/ui-native` (NativeWind components).
+
+### Building for Distribution
+
+```bash
+# Install EAS CLI (once)
+pnpm add -g eas-cli
+eas login
+
+# Build for Android
+pnpm mobile:build:android
+
+# Build for iOS
+pnpm mobile:build:ios
+```
+
+Builds run in Expo's cloud. Output links are printed when the build finishes.
 
 ## Next Steps
 
