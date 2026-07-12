@@ -1,0 +1,63 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "nativewind",
+    "strict": true,
+    "noEmit": true,
+    "composite": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "lib": [
+      "ESNext"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@hecto/shared-types": [
+        "../../libs/shared/types/src/index.ts"
+      ],
+      "@hecto/api-client": [
+        "../../libs/shared/api-client/src/index.ts"
+      ],
+      "@hecto/schemas": [
+        "../../libs/shared/schemas/src/index.ts"
+      ],
+      "@hecto/ui-native": [
+        "../../libs/shared/ui-native/src/index.ts"
+      ]
+    },
+    "types": [
+      "nativewind/types"
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.d.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts",
+    ".expo/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../libs/shared/schemas"
+    },
+    {
+      "path": "../../libs/shared/api-client"
+    },
+    {
+      "path": "../../libs/shared/types"
+    }
+  ]
+}

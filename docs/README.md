@@ -35,32 +35,39 @@ mise run up
 pnpm db:migrate
 
 # Seed demo users and default leave types
-mise run seed
+pnpm seed
 
 # Start backend with hot-reload (separate terminal)
-mise run dev
+pnpm dev:backend
 
-# Start frontend (separate terminal)
-pnpm nx serve manager
+# Start manager frontend (separate terminal)
+pnpm dev:manager
+
+# Start mobile app (separate terminal, requires Expo Go or simulator)
+pnpm mobile
 ```
 
 ### Common Tasks
 
 | Task | Command | Purpose |
 |------|---------|---------|
-| **Start backend** | `mise run dev` | Run backend with hot-reload |
-| **Start frontend** | `pnpm nx serve manager` | Run React frontend (Vite) |
-| **Run all tests** | `mise run test` | Unit tests with Jest |
-| **Lint code** | `mise run lint` | Run ESLint on all projects |
-| **Type-check** | `mise run typecheck` | TypeScript type checking |
-| **Full quality check** | `mise run check` | lint + typecheck + test all |
-| **Build all** | `mise run build` | Webpack build (backend) |
+| **Start backend** | `pnpm dev:backend` | Run backend with hot-reload |
+| **Start manager** | `pnpm dev:manager` | Run React frontend (Vite) at `localhost:4200` |
+| **Start worker** | `pnpm dev:worker` | Run BullMQ email worker locally |
+| **Start mobile** | `pnpm mobile` | Run Expo dev server (employee app) |
+| **Mobile Android** | `pnpm mobile:android` | Open on Android simulator |
+| **Mobile iOS** | `pnpm mobile:ios` | Open on iOS simulator |
+| **Run all tests** | `pnpm test` | Unit tests via Jest/Vitest |
+| **Lint code** | `pnpm lint` | Run ESLint on all projects |
+| **Type-check** | `pnpm typecheck` | TypeScript type checking |
+| **Build all** | `pnpm build` | Production builds (backend + libs) |
 | **Start containers** | `mise run up` | Docker Compose up (daemon mode) |
 | **Stop containers** | `mise run down` | Docker Compose down |
 | **Generate migration** | `pnpm db:generate` | Create SQL migration from schema changes |
 | **Apply migrations** | `pnpm db:migrate` | Apply pending migrations to database |
 | **Database UI** | `pnpm db:studio` | Open Drizzle Studio (visual DB browser) |
-| **Seed database** | `mise run seed` | Seed demo users + default leave types |
+| **Seed database** | `pnpm seed` | Seed demo users + default leave types |
+| **Clear Nx cache** | `pnpm clean:cache` | Reset Nx build cache |
 | **View emails (dev)** | Open `http://localhost:8025` | Mailhog web UI |
 
 ## Documentation Structure
@@ -84,10 +91,12 @@ pnpm nx serve manager
 - Employee profiles (position, department, phone, hire date, notes)
 - Invitation system — managers/HR invite new employees via email
 - Soft deactivation (preserves history)
+- Per-employee weekly availability schedule (`employee_availability`)
 
 **Schedule Management**
 - Weekly calendar view with per-employee shift rows
 - Create, edit, and delete individual shifts
+- Open (unassigned) shifts — `user_id` nullable, `is_open` flag
 - Recurring shifts (repeat on selected weekdays, optional end date)
 - Bulk delete: all future shifts or all shifts for an employee
 - Copy current week's shifts to next week
@@ -103,8 +112,27 @@ pnpm nx serve manager
 - Manager can edit actual days taken on any request (corrects non-working days); tracked with `isEdited` + audit fields
 - Manager grid view: all employees × leave types, click to set quota
 
+**Work Events**
+- Employees clock in/out and log events from the mobile app: `arrival`, `departure`, `break_start`, `break_end`, `remote_arrival`, `business_trip_start`, `business_trip_end`
+- Events stored in `work_events` table with timestamp and notes
+- Work history view (employee `/my-history`, manager per-employee)
+
+**Event Change Requests**
+- Employees submit corrections to past events (add/edit/delete)
+- Managers review via `/change-requests` (approve/reject with notes)
+- Stored in `event_change_requests` table with full audit trail
+
+**Employee Mobile App** (`apps/employee`)
+- React Native + Expo (bare workflow, EAS Build for distribution)
+- NativeWind v4 (Tailwind CSS for React Native)
+- Screens: Shifts, Leaves, Events (clock in/out), History, Profile
+- Shared types and schemas via `@hecto/api-client`, `@hecto/shared-types`
+- Push token registration endpoint (`POST /users/push-tokens`)
+
 **RBAC**
-- `RolesGuard` + `@Roles()` decorator on all manager/HR/admin endpoints
+- `JwtAuthGuard` registered globally as `APP_GUARD` — all routes protected by default
+- `@Public()` decorator opts out individual routes (e.g. login, register)
+- `RolesGuard` + `@Roles()` decorator on manager/HR/admin endpoints
 - Frontend route guards redirect employees away from manager pages
 
 **Infrastructure**
@@ -122,23 +150,31 @@ hectohr/
 │   │   ├── src/              # TypeScript source
 │   │   ├── src/worker.ts     # BullMQ worker entry point
 │   │   └── Dockerfile        # Multi-stage build (backend + worker)
-│   └── manager/              # React frontend (port 4200)
+│   ├── employee/             # React Native + Expo mobile app
+│   │   ├── app/              # Expo Router file-based screens
+│   │   │   ├── (app)/        # Authenticated tab screens (shifts, leaves, events, history)
+│   │   │   └── (auth)/       # Login screen
+│   │   └── src/              # Services, stores, components
+│   └── manager/              # React SPA (port 4200)
 │       └── src/              # Vite + TanStack Router + Tailwind CSS
 ├── libs/
 │   ├── backend/
 │   │   ├── auth/             # @hecto/auth — JWT, sessions, email verification
 │   │   ├── database/         # @hecto/database — Drizzle ORM + migrations
 │   │   ├── employees/        # @hecto/employees — employee CRUD + profiles
+│   │   ├── events/           # @hecto/events — work events + event change requests
 │   │   ├── leave/            # @hecto/leave — leave types, balances, requests
 │   │   ├── mail/             # @hecto/mail — Nodemailer + email templates
 │   │   ├── queue/            # @hecto/queue — BullMQ jobs + processors
+│   │   ├── reports/          # @hecto/reports — work history summaries
 │   │   ├── shifts/           # @hecto/shifts — shifts + recurring shifts
-│   │   └── users/            # @hecto/users — user CRUD, argon2id
+│   │   └── users/            # @hecto/users — user CRUD, push tokens
 │   └── shared/
 │       ├── api-client/       # @hecto/api-client — Axios client + auth interceptors
 │       ├── schemas/          # @hecto/schemas — Zod validation schemas
 │       ├── types/            # @hecto/shared-types — shared TypeScript types
-│       └── ui/               # @hecto/ui — React component library (Tailwind)
+│       ├── ui/               # @hecto/ui — React component library (Tailwind, web)
+│       └── ui-native/        # @hecto/ui-native — React Native component library (NativeWind)
 ├── docs/                     # This documentation
 ├── docker-compose.yml        # All services: Postgres, Redis, Mailhog, backend, worker
 ├── drizzle.config.ts         # Drizzle Kit configuration

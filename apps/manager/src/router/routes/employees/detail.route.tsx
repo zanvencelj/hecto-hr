@@ -1,6 +1,7 @@
 import { createRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { HistoryView } from '@/components/history/history-view';
 import { rootRoute } from '../root.route';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api';
@@ -36,10 +37,13 @@ export const employeeDetailRoute = createRoute({
   component: EmployeeDetailPage,
 });
 
+type Tab = 'profile' | 'history';
+
 function EmployeeDetailPage() {
   const { id } = employeeDetailRoute.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [tab, setTab] = useState<Tab>('profile');
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -123,19 +127,21 @@ function EmployeeDetailPage() {
           description={employee.email}
           action={
             <div className="flex gap-2">
-              {!editing && (
+              {tab === 'profile' && !editing && (
                 <Button size="sm" variant="secondary" onClick={() => startEdit(employee)}>
                   Edit
                 </Button>
               )}
-              <Button
-                size="sm"
-                variant={employee.isActive ? 'destructive' : 'secondary'}
-                onClick={() => toggleActive.mutate()}
-                loading={toggleActive.isPending}
-              >
-                {employee.isActive ? 'Deactivate' : 'Reactivate'}
-              </Button>
+              {tab === 'profile' && (
+                <Button
+                  size="sm"
+                  variant={employee.isActive ? 'destructive' : 'secondary'}
+                  onClick={() => toggleActive.mutate()}
+                  loading={toggleActive.isPending}
+                >
+                  {employee.isActive ? 'Deactivate' : 'Reactivate'}
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -147,6 +153,32 @@ function EmployeeDetailPage() {
           }
         />
 
+        <div className="flex border-b border-gray-200">
+          {(['profile', 'history'] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+                tab === t
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              {t === 'history' ? 'Work History' : 'Profile'}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'history' && (
+          <HistoryView
+            summaryEndpoint={`/reports/summary/${id}`}
+            shiftsEndpoint={`/shifts/employee/${id}`}
+            eventsEndpoint={`/events/employee/${id}`}
+          />
+        )}
+
+        {tab === 'profile' && (
+          <>
         {error && <Alert variant="error">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
@@ -252,6 +284,8 @@ function EmployeeDetailPage() {
               </dl>
             </CardContent>
           </Card>
+        )}
+          </>
         )}
       </div>
     </AppLayout>

@@ -17,20 +17,6 @@
       "breakpoints": true
     },
     {
-      "idx": 2,
-      "version": "7",
-      "when": 1746230400000,
-      "tag": "0002_tenancy_roles_softdelete",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1746316800000,
-      "tag": "0003_password_resets",
-      "breakpoints": true
-    },
-    {
       "idx": 4,
       "version": "7",
       "when": 1777739285746,
@@ -49,6 +35,34 @@
       "version": "7",
       "when": 1779732498682,
       "tag": "0006_keen_terror",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779824740403,
+      "tag": "0007_tiresome_fallen_one",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779824862563,
+      "tag": "0008_premium_the_liberteens",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1779824932658,
+      "tag": "0009_silly_wolfpack",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783802600970,
+      "tag": "0010_clumsy_lucky_pierre",
       "breakpoints": true
     }
   ]

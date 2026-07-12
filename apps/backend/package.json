@@ -102,6 +102,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1041.0",
     "@hecto/auth": "workspace:*",
     "@hecto/database": "workspace:*",
+    "@hecto/reports": "workspace:*",
     "@hecto/mail": "workspace:*",
     "@hecto/queue": "workspace:*",
     "@hecto/shared-types": "workspace:*",

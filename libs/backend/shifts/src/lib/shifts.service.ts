@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import type { AccessTokenPayload, ShiftPublic, ShiftBreakPublic } from '@hecto/shared-types';
 import { ShiftsRepository } from './shifts.repository';
 import { CreateShiftDto } from './dto/create-shift.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
 import { CreateShiftBreakDto } from './dto/create-shift-break.dto';
-import type { Shift, ShiftBreak } from '@hecto/database';
+import { SetAvailabilityDto } from './dto/set-availability.dto';
+import type { Shift, ShiftBreak, EmployeeAvailability } from '@hecto/database';
 
 const MANAGER_ROLES = ['admin', 'hr', 'manager'];
 
@@ -28,11 +29,12 @@ export class ShiftsService {
     }
 
     const shift = await this.shiftsRepo.createShift({
-      userId: dto.userId,
+      userId: dto.userId ?? null,
       organizationId: currentUser.organizationId,
       date: dto.date,
       startTime: dto.startTime,
       endTime: dto.endTime,
+      isOpen: dto.isOpen ?? !dto.userId,
       notes: dto.notes ?? null,
       createdByUserId: currentUser.sub,
     });
@@ -45,7 +47,7 @@ export class ShiftsService {
     currentUser: AccessTokenPayload,
   ): Promise<ShiftPublic> {
     const recurringShift = await this.shiftsRepo.createRecurringShift({
-      userId: dto.userId,
+      userId: dto.userId!,
       organizationId: currentUser.organizationId,
       daysOfWeek: dto.recurringDays!,
       startTime: dto.startTime,
@@ -195,6 +197,43 @@ export class ShiftsService {
     }
 
     await this.shiftsRepo.deleteBreak(breakId);
+  }
+
+  async getOpenShifts(
+    currentUser: AccessTokenPayload,
+    from: string,
+    to: string,
+  ): Promise<ShiftPublic[]> {
+    const openShifts = await this.shiftsRepo.findOpenShifts(currentUser.organizationId, from, to);
+    return openShifts.map((s) => this.toPublic({ ...s, breaks: [] }));
+  }
+
+  async claimShift(id: string, currentUser: AccessTokenPayload): Promise<ShiftPublic> {
+    const claimed = await this.shiftsRepo.claimShift(id, currentUser.sub);
+    if (!claimed) throw new ConflictException('Shift is no longer available');
+    return this.toPublic({ ...claimed, breaks: [] });
+  }
+
+  async setAvailability(
+    currentUser: AccessTokenPayload,
+    dto: SetAvailabilityDto,
+  ): Promise<EmployeeAvailability> {
+    return this.shiftsRepo.upsertAvailability({
+      userId: currentUser.sub,
+      organizationId: currentUser.organizationId,
+      dayOfWeek: dto.dayOfWeek,
+      isAvailable: dto.isAvailable,
+      timeFrom: dto.timeFrom ?? null,
+      timeTo: dto.timeTo ?? null,
+    });
+  }
+
+  async getMyAvailability(currentUser: AccessTokenPayload): Promise<EmployeeAvailability[]> {
+    return this.shiftsRepo.findAvailabilityForUser(currentUser.sub);
+  }
+
+  async getOrgAvailability(currentUser: AccessTokenPayload): Promise<EmployeeAvailability[]> {
+    return this.shiftsRepo.findAvailabilityForOrg(currentUser.organizationId);
   }
 
   private toPublic(shift: Shift & { breaks: ShiftBreak[] }): ShiftPublic {

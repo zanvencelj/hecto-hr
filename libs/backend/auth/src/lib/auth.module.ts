@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '@hecto/users';
@@ -20,7 +20,7 @@ import { PasswordResetsRepository } from './password-resets.repository';
         secret: config.getOrThrow('JWT_ACCESS_SECRET'),
       }),
     }),
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   controllers: [AuthController],
   providers: [AuthService, SessionsRepository, EmailVerificationRepository, OrganizationsRepository, PasswordResetsRepository, JwtAuthGuard, RolesGuard],

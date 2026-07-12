@@ -1,6 +1,6 @@
 [tools]
 node = "22"
-pnpm = "latest"
+pnpm = "10.11.0"
 pre-commit = "latest"
 
 # ---- Docker Compose ----
@@ -16,6 +16,10 @@ run = "docker compose down"
 [tasks.build]
 description = "Build all services with Docker Compose"
 run = "docker compose build"
+
+[tasks.logs]
+description = "Attach to the specified service logs"
+run = "docker compose logs -f"
 
 # ---- Quality ----
 

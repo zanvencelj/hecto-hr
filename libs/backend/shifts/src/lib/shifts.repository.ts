@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, between, eq, gte, inArray } from 'drizzle-orm';
+import { and, between, eq, gte, inArray, isNull } from 'drizzle-orm';
 import {
   DATABASE_CONNECTION,
   type Database,
@@ -12,6 +12,9 @@ import {
   recurringShifts,
   type RecurringShift,
   type NewRecurringShift,
+  employeeAvailability,
+  type EmployeeAvailability,
+  type NewEmployeeAvailability,
 } from '@hecto/database';
 
 export interface ShiftWithBreaks extends Shift {
@@ -163,5 +166,59 @@ export class ShiftsRepository {
     const conditions = [eq(shifts.userId, userId), eq(shifts.organizationId, organizationId)];
     if (fromDate) conditions.push(gte(shifts.date, fromDate));
     await this.db.delete(shifts).where(and(...conditions));
+  }
+
+  async findOpenShifts(organizationId: string, from: string, to: string): Promise<Shift[]> {
+    return this.db
+      .select()
+      .from(shifts)
+      .where(
+        and(
+          eq(shifts.organizationId, organizationId),
+          eq(shifts.isOpen, true),
+          isNull(shifts.userId),
+          between(shifts.date, from, to),
+        ),
+      );
+  }
+
+  async claimShift(id: string, userId: string): Promise<Shift> {
+    const result = await this.db
+      .update(shifts)
+      .set({ userId, isOpen: false, updatedAt: new Date() })
+      .where(and(eq(shifts.id, id), eq(shifts.isOpen, true), isNull(shifts.userId)))
+      .returning();
+    return result[0]!;
+  }
+
+  async upsertAvailability(data: NewEmployeeAvailability): Promise<EmployeeAvailability> {
+    const result = await this.db
+      .insert(employeeAvailability)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [employeeAvailability.userId, employeeAvailability.dayOfWeek],
+        set: {
+          isAvailable: data.isAvailable,
+          timeFrom: data.timeFrom ?? null,
+          timeTo: data.timeTo ?? null,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result[0]!;
+  }
+
+  async findAvailabilityForUser(userId: string): Promise<EmployeeAvailability[]> {
+    return this.db
+      .select()
+      .from(employeeAvailability)
+      .where(eq(employeeAvailability.userId, userId));
+  }
+
+  async findAvailabilityForOrg(organizationId: string): Promise<EmployeeAvailability[]> {
+    return this.db
+      .select()
+      .from(employeeAvailability)
+      .where(eq(employeeAvailability.organizationId, organizationId));
   }
 }

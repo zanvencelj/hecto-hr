@@ -275,7 +275,7 @@ docker compose up -d --force-recreate worker
 3. Is `SMTP_HOST` correctly set? (see above)
 4. If running without Docker, is the local worker process running?
    ```bash
-   pnpm nx serve worker
+   pnpm dev:worker
    ```
 
 ### Verification code expired
@@ -341,7 +341,7 @@ docker compose ps postgres   # should show "healthy"
 docker compose down -v   # WARNING: destroys all data
 mise run up
 pnpm db:migrate
-mise run seed            # optional: re-seed with sample users
+pnpm seed            # optional: re-seed with sample users
 ```
 
 ## Redis Issues
@@ -361,7 +361,7 @@ docker compose ps redis   # should show "healthy"
 **Problem**: Registration emails queued but not sent.
 
 **Checklist**:
-1. Is the worker process running (locally: `pnpm nx serve worker`, Docker: check `docker compose ps worker`)?
+1. Is the worker process running (locally: `pnpm dev:worker`, Docker: check `docker compose ps worker`)?
 2. Is Redis healthy?
 3. Check worker logs for errors:
    ```bash

@@ -11,7 +11,7 @@ export interface ShiftBreakPublic {
 
 export interface ShiftPublic {
   id: string;
-  userId: string;
+  userId: string | null;
   organizationId: string;
   date: string;
   startTime: string;

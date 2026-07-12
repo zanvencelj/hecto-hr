@@ -12,8 +12,13 @@ import {
 } from 'class-validator';
 
 export class CreateShiftDto {
+  @IsOptional()
   @IsUUID()
-  userId!: string;
+  userId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isOpen?: boolean;
 
   @IsDateString()
   date!: string;

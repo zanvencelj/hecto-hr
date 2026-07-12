@@ -17,7 +17,7 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  const rawOrigins = process.env['CORS_ORIGINS'] ?? 'http://localhost:4200';
+  const rawOrigins = process.env['CORS_ORIGINS'] ?? 'http://localhost:4200,http://localhost:8081';
   const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
 
   app.enableCors({

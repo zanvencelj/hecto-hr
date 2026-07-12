@@ -6,12 +6,14 @@ import { TerminusModule } from '@nestjs/terminus';
 import { LoggerModule } from 'nestjs-pino';
 import { DatabaseModule } from '@hecto/database';
 import { UsersModule } from '@hecto/users';
-import { AuthModule } from '@hecto/auth';
+import { AuthModule, JwtAuthGuard } from '@hecto/auth';
 import { QueueModule } from '@hecto/queue';
 import { StorageModule } from '@hecto/storage';
 import { EmployeesModule } from '@hecto/employees';
 import { ShiftsModule } from '@hecto/shifts';
 import { LeaveModule } from '@hecto/leave';
+import { EventsModule } from '@hecto/events';
+import { ReportsModule } from '@hecto/reports';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
@@ -39,6 +41,8 @@ import { validateEnv } from '../env.validation';
     EmployeesModule,
     ShiftsModule,
     LeaveModule,
+    EventsModule,
+    ReportsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
@@ -46,6 +50,10 @@ import { validateEnv } from '../env.validation';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

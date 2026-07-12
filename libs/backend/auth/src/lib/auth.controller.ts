@@ -26,6 +26,7 @@ import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyEmailCodeDto } from './dto/verify-email-code.dto';
@@ -94,20 +95,22 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   logout(
+    @Body() dto: LogoutDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    return this.authService.logout(req, res);
+    return this.authService.logout(req, res, dto.refreshToken);
   }
 
   @Public()
   @Post('logout-all')
   @HttpCode(HttpStatus.NO_CONTENT)
   logoutAll(
+    @Body() dto: LogoutDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    return this.authService.logoutAll(req, res);
+    return this.authService.logoutAll(req, res, dto.refreshToken);
   }
 
   @Get('sessions')

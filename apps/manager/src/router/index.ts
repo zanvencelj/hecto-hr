@@ -13,6 +13,8 @@ import { scheduleManagerRoute } from './routes/schedule/manager.route';
 import { scheduleEmployeeRoute } from './routes/schedule/employee.route';
 import { leaveManagerRoute } from './routes/leave/manager.route';
 import { leaveEmployeeRoute } from './routes/leave/employee.route';
+import { changeRequestsRoute } from './routes/change-requests.route';
+import { myHistoryRoute } from './routes/my-history.route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -24,6 +26,8 @@ const routeTree = rootRoute.addChildren([
   scheduleEmployeeRoute,
   leaveManagerRoute,
   leaveEmployeeRoute,
+  changeRequestsRoute,
+  myHistoryRoute,
   authLayoutRoute.addChildren([loginRoute, registerRoute]),
 ]);
 

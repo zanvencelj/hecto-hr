@@ -131,7 +131,7 @@ This applies all pending SQL migrations in `libs/backend/database/migrations/`. 
 Populate the database with initial users for development:
 
 ```bash
-mise run seed
+pnpm seed
 ```
 
 Creates sample users with password `hecto123`.
@@ -141,7 +141,7 @@ Creates sample users with password `hecto123`.
 ### Start the Backend
 
 ```bash
-mise run dev
+pnpm dev:backend
 ```
 
 Or using Nx directly:
@@ -165,7 +165,7 @@ The API is available at `http://localhost:3000/api`.
 In a separate terminal:
 
 ```bash
-pnpm nx serve manager
+pnpm dev:manager
 ```
 
 The React app is available at `http://localhost:4200`.
@@ -175,7 +175,7 @@ The React app is available at `http://localhost:4200`.
 The worker processes background jobs (email sending). In Docker Compose it runs automatically. For local development without Docker, start it separately:
 
 ```bash
-pnpm nx serve worker
+pnpm dev:worker
 ```
 
 ### Test the API
@@ -199,10 +199,10 @@ During development, all emails are captured by Mailhog. Open `http://localhost:8
 
 ```bash
 # Run all tests (all projects)
-mise run test
+pnpm test
 
 # Run backend tests in watch mode
-mise run test-backend
+pnpm nx test backend --watch
 
 # Run backend tests once
 pnpm nx test backend
@@ -212,13 +212,13 @@ pnpm nx test backend
 
 ```bash
 # Lint all code
-mise run lint
+pnpm lint
 
 # Type-check all projects
-mise run typecheck
+pnpm typecheck
 
 # All checks (lint + typecheck + test)
-mise run check
+pnpm lint && pnpm typecheck
 ```
 
 ## Database Workflow
@@ -376,15 +376,15 @@ pnpm install
 
 | What | Command |
 |------|---------|
-| Start backend (dev) | `mise run dev` |
-| Start frontend | `pnpm nx serve manager` |
+| Start backend (dev) | `pnpm dev:backend` |
+| Start frontend | `pnpm dev:manager` |
 | Start infrastructure | `mise run up` |
 | Apply migrations | `pnpm db:migrate` |
-| Seed database | `mise run seed` |
+| Seed database | `pnpm seed` |
 | View emails | `http://localhost:8025` |
-| Run tests | `mise run test` |
-| Lint code | `mise run lint` |
-| Type-check | `mise run typecheck` |
-| Full check | `mise run check` |
+| Run tests | `pnpm test` |
+| Lint code | `pnpm lint` |
+| Type-check | `pnpm typecheck` |
+| Full check | `pnpm lint && pnpm typecheck` |
 | Stop Docker | `mise run down` |
-| Build for production | `mise run build` |
+| Build for production | `pnpm build` |

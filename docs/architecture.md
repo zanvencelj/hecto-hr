@@ -22,7 +22,7 @@ This document describes the project structure, technology stack, design decision
 | **Password hashing** | argon2 | latest | argon2id algorithm |
 | **JWT** | @nestjs/jwt | latest | Token signing and verification |
 
-### Frontend
+### Manager Web
 
 | Layer | Technology | Version | Purpose |
 |-------|-----------|---------|---------|
@@ -34,6 +34,18 @@ This document describes the project structure, technology stack, design decision
 | **Styles** | Tailwind CSS | 4 | Utility-first CSS |
 | **Validation** | Zod | 4 | Schema validation |
 | **HTTP client** | Axios | 1 | API requests |
+
+### Employee Mobile App
+
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| **Framework** | React Native | 0.85+ | Cross-platform mobile UI |
+| **Platform** | Expo | 56 | Build tooling, OTA updates, native APIs |
+| **Routing** | Expo Router | 56 | File-based navigation |
+| **Styles** | NativeWind | 4 | Tailwind CSS for React Native |
+| **Data fetching** | TanStack Query | 5 | Server state management |
+| **State** | Zustand + `expo-secure-store` | 5 | Auth state with secure persistence |
+| **Build** | EAS Build | — | Cloud builds for iOS and Android |
 
 ### Monorepo & Tooling
 
@@ -62,6 +74,29 @@ hectohr/
 │   │   ├── Dockerfile                        # Multi-stage build (backend + worker)
 │   │   └── webpack.worker.config.js          # Webpack config for worker bundle
 │   │
+│   ├── employee/                             # React Native + Expo (mobile)
+│   │   ├── app/
+│   │   │   ├── _layout.tsx                   # Root layout (auth check, fonts, providers)
+│   │   │   ├── index.tsx                     # Redirect → (app) or (auth)
+│   │   │   ├── profile.tsx                   # Profile + logout screen
+│   │   │   ├── (auth)/
+│   │   │   │   └── login.tsx                 # Login screen
+│   │   │   └── (app)/
+│   │   │       ├── _layout.tsx               # Bottom tab navigator
+│   │   │       ├── shifts/index.tsx          # View own upcoming shifts
+│   │   │       ├── leaves/index.tsx          # View balances + submit leave requests
+│   │   │       ├── events/index.tsx          # Clock in/out, log work events
+│   │   │       └── history/index.tsx         # Work history + event timeline
+│   │   ├── src/
+│   │   │   ├── components/DatePicker.tsx     # Native date picker wrapper
+│   │   │   ├── lib/api.ts                    # Axios client for mobile
+│   │   │   ├── services/                     # API service functions (shifts, leaves, events…)
+│   │   │   └── stores/
+│   │   │       ├── auth.store.ts             # Zustand + expo-secure-store persistence
+│   │   │       └── preferences.store.ts      # User UI preferences (event button order)
+│   │   ├── app.json                          # Expo app config
+│   │   └── eas.json                          # EAS Build profiles (development, preview, production)
+│   │
 │   └── manager/                              # React SPA (port 4200)
 │       └── src/
 │           ├── main.tsx                      # React entry point
@@ -69,6 +104,7 @@ hectohr/
 │           │   ├── app.tsx                   # Root component + router
 │           │   └── providers.tsx             # QueryClient, Router, ToastProvider
 │           ├── components/layout/            # AppLayout shell
+│           ├── components/history/           # Shared HistoryView component
 │           ├── lib/
 │           │   ├── api.ts                    # Axios client + auth interceptor setup
 │           │   ├── date.ts                   # fmtDate / fmtDateTime helpers (dd.mm.YYYY)
@@ -84,8 +120,10 @@ hectohr/
 │           │   ├── leave/
 │           │   │   ├── manager.route.tsx      # /leave — requests + balances (manager)
 │           │   │   └── employee.route.tsx     # /my-leave — balances + requests (employee)
-│           │   └── schedule/
-│           │       └── manager.route.tsx      # /schedule — weekly calendar (manager)
+│           │   ├── schedule/
+│           │   │   └── manager.route.tsx      # /schedule — weekly calendar (manager)
+│           │   ├── change-requests.route.tsx  # /change-requests — event change request review
+│           │   └── my-history.route.tsx       # /my-history — own work history
 │           └── stores/
 │               └── auth.store.ts             # Zustand auth state
 │
@@ -97,11 +135,11 @@ hectohr/
 │   │   │       ├── auth.service.ts           # Login, register, verify, refresh, logout
 │   │   │       ├── auth.controller.ts        # /auth/* endpoints
 │   │   │       ├── guards/
-│   │   │       │   ├── jwt-auth.guard.ts     # Global JWT guard
+│   │   │       │   ├── jwt-auth.guard.ts     # Global JWT guard (registered as APP_GUARD)
 │   │   │       │   └── roles.guard.ts        # Role-based access guard
 │   │   │       └── decorators/
 │   │   │           ├── current-user.decorator.ts
-│   │   │           ├── public.decorator.ts
+│   │   │           ├── public.decorator.ts   # @Public() — bypasses JwtAuthGuard
 │   │   │           └── roles.decorator.ts    # @Roles('admin', 'hr', ...)
 │   │   │
 │   │   ├── database/                         # @hecto/database
@@ -112,9 +150,13 @@ hectohr/
 │   │   │       ├── email-verifications.schema.ts
 │   │   │       ├── invitations.schema.ts
 │   │   │       ├── employee-profiles.schema.ts
+│   │   │       ├── employee-availability.schema.ts
 │   │   │       ├── shifts.schema.ts
 │   │   │       ├── shift-breaks.schema.ts
 │   │   │       ├── recurring-shifts.schema.ts
+│   │   │       ├── work-events.schema.ts
+│   │   │       ├── event-change-requests.schema.ts
+│   │   │       ├── push-tokens.schema.ts
 │   │   │       ├── leave-types.schema.ts
 │   │   │       ├── leave-balances.schema.ts
 │   │   │       └── leave-requests.schema.ts
@@ -125,6 +167,13 @@ hectohr/
 │   │   │       ├── employees.service.ts      # CRUD, invite, profile management
 │   │   │       ├── employees.controller.ts   # /employees endpoints
 │   │   │       └── employees.repository.ts
+│   │   │
+│   │   ├── events/                           # @hecto/events
+│   │   │   └── src/lib/
+│   │   │       ├── events.module.ts
+│   │   │       ├── events.service.ts         # Work event creation, history, change requests
+│   │   │       ├── events.controller.ts      # /events endpoints
+│   │   │       └── events.repository.ts
 │   │   │
 │   │   ├── leave/                            # @hecto/leave
 │   │   │   └── src/lib/
@@ -151,6 +200,11 @@ hectohr/
 │   │   │       └── processors/
 │   │   │           └── tasks.processor.ts    # Process jobs (concurrency 5)
 │   │   │
+│   │   ├── reports/                          # @hecto/reports
+│   │   │   └── src/lib/
+│   │   │       ├── reports.module.ts
+│   │   │       └── reports.controller.ts     # /reports endpoints (work history summaries)
+│   │   │
 │   │   ├── shifts/                           # @hecto/shifts
 │   │   │   └── src/lib/
 │   │   │       ├── shifts.module.ts
@@ -162,7 +216,11 @@ hectohr/
 │   │       └── src/lib/
 │   │           ├── users.module.ts
 │   │           ├── users.service.ts          # create, findById, findByEmail
-│   │           └── users.repository.ts
+│   │           ├── users.repository.ts
+│   │           ├── push-tokens.controller.ts # POST/DELETE /users/push-tokens
+│   │           ├── push-tokens.repository.ts
+│   │           └── decorators/
+│   │               └── current-user.decorator.ts
 │   │
 │   └── shared/
 │       ├── api-client/                       # @hecto/api-client
@@ -179,27 +237,33 @@ hectohr/
 │       │   └── src/lib/
 │       │       ├── auth.types.ts             # AccessTokenPayload, LoginResponse, etc.
 │       │       ├── employee.types.ts         # EmployeePublic
+│       │       ├── event.types.ts            # WorkEventPublic, EventChangeRequestPublic
 │       │       ├── leave.types.ts            # LeaveTypePublic, LeaveBalancePublic, LeaveRequestPublic
-│       │       └── shift.types.ts            # ShiftPublic, ShiftBreakPublic
+│       │       └── shift.types.ts            # ShiftPublic (userId nullable), ShiftBreakPublic
 │       │
-│       └── ui/                               # @hecto/ui
+│       ├── ui/                               # @hecto/ui (web)
+│       │   └── src/lib/
+│       │       ├── button.tsx
+│       │       ├── input.tsx
+│       │       ├── form-field.tsx
+│       │       ├── alert.tsx
+│       │       ├── badge.tsx
+│       │       ├── card.tsx
+│       │       ├── select.tsx
+│       │       ├── textarea.tsx
+│       │       ├── avatar.tsx
+│       │       ├── separator.tsx
+│       │       ├── page-header.tsx
+│       │       ├── time-picker.tsx           # Custom HH:MM segments (24h, no browser locale)
+│       │       ├── date-picker.tsx           # Custom DD.MM.YYYY segments
+│       │       ├── dialog.tsx                # Accessible modal
+│       │       ├── toast.tsx                 # ToastProvider + useToast() hook
+│       │       └── skeleton.tsx             # Loading placeholder
+│       │
+│       └── ui-native/                        # @hecto/ui-native (React Native)
 │           └── src/lib/
-│               ├── button.tsx
-│               ├── input.tsx
-│               ├── form-field.tsx
-│               ├── alert.tsx
-│               ├── badge.tsx
-│               ├── card.tsx
-│               ├── select.tsx
-│               ├── textarea.tsx
-│               ├── avatar.tsx
-│               ├── separator.tsx
-│               ├── page-header.tsx
-│               ├── time-picker.tsx           # Custom HH:MM segments (24h, no browser locale)
-│               ├── date-picker.tsx           # Custom DD.MM.YYYY segments
-│               ├── dialog.tsx                # Accessible modal
-│               ├── toast.tsx                 # ToastProvider + useToast() hook
-│               └── skeleton.tsx             # Loading placeholder
+│               ├── card.tsx                  # NativeWind card component
+│               └── spinner.tsx               # Loading spinner
 │
 ├── docs/
 ├── docker-compose.yml
@@ -217,10 +281,12 @@ hectohr/
 @hecto/shared-types          (no local deps)
 @hecto/schemas               (no local deps)
 @hecto/ui                    (no local deps)
+@hecto/ui-native             (no local deps)
        ↑                            ↑
 @hecto/api-client ──────── @hecto/shared-types
 
-apps/manager ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui
+apps/manager  ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui
+apps/employee ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui-native
 
 @hecto/database              (no local deps)
        ↑
@@ -235,9 +301,11 @@ apps/manager ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types
 @hecto/employees ── @hecto/database, @hecto/shared-types
 @hecto/shifts    ── @hecto/database, @hecto/shared-types
 @hecto/leave     ── @hecto/database, @hecto/shared-types
+@hecto/events    ── @hecto/database, @hecto/shared-types
+@hecto/reports   ── @hecto/database, @hecto/shifts, @hecto/events
        ↑
-apps/backend ──── @hecto/auth, @hecto/database, @hecto/employees, @hecto/leave,
-                  @hecto/queue, @hecto/shifts, @hecto/users
+apps/backend ──── @hecto/auth, @hecto/database, @hecto/employees, @hecto/events,
+                  @hecto/leave, @hecto/queue, @hecto/reports, @hecto/shifts, @hecto/users
 ```
 
 ## Authentication & RBAC Architecture
@@ -292,11 +360,13 @@ POST /employees/invite  →  create invitation record  →  enqueue invite email
 
 ### Guards and Decorators
 
+`JwtAuthGuard` is registered as `APP_GUARD` in `AppModule` — all routes are protected by default. Individual routes opt out with `@Public()`.
+
 | Symbol | Type | Usage |
 |--------|------|-------|
-| `JwtAuthGuard` | Guard | Applied globally; blocks unauthenticated requests |
-| `RolesGuard` | Guard | Applied globally; enforces `@Roles()` on protected routes |
-| `@Public()` | Decorator | Marks route as unauthenticated (bypasses `JwtAuthGuard`) |
+| `JwtAuthGuard` | Guard | `APP_GUARD` — globally blocks unauthenticated requests |
+| `RolesGuard` | Guard | `APP_GUARD` — enforces `@Roles()` on protected routes |
+| `@Public()` | Decorator | Opts out of `JwtAuthGuard` (login, register, health check) |
 | `@Roles(...roles)` | Decorator | Restricts route to listed roles |
 | `@CurrentUser()` | Param decorator | Injects `AccessTokenPayload` from `req.user` |
 
@@ -351,6 +421,31 @@ POST /employees/invite  →  create invitation record  →  enqueue invite email
 | `PATCH` | `/leave/requests/:id/days` | admin/hr/manager | Edit actual days taken |
 | `DELETE` | `/leave/requests/:id` | JWT | Cancel request |
 
+### Work Events — `/events`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/events/me` | JWT | Get own events (paginated) |
+| `POST` | `/events` | JWT | Log a new work event |
+| `GET` | `/events/employee/:userId` | admin/hr/manager | Get events for a specific employee |
+| `GET` | `/events/change-requests` | admin/hr/manager | List all pending change requests |
+| `POST` | `/events/change-requests` | JWT | Submit event change request |
+| `PATCH` | `/events/change-requests/:id/review` | admin/hr/manager | Approve or reject a change request |
+
+### Push Tokens — `/users/push-tokens`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/users/push-tokens` | JWT | Register a push notification token |
+| `DELETE` | `/users/push-tokens` | JWT | Remove a push notification token |
+
+### Reports — `/reports`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/reports/my/summary` | JWT | Own work summary (hours, events) |
+| `GET` | `/reports/employee/:userId/summary` | admin/hr/manager | Employee work summary |
+
 ## Database Schema
 
 Migrations live in `libs/backend/database/migrations/` and are applied with `pnpm db:migrate`.
@@ -386,11 +481,12 @@ Migrations live in `libs/backend/database/migrations/` and are applied with `pnp
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | `uuid` | PK |
-| `user_id` | `uuid` | FK → `users` |
+| `user_id` | `uuid` | FK → `users` (nullable — open/unassigned shifts) |
 | `organization_id` | `uuid` | FK → `organizations` |
 | `date` | `date` | Shift date |
 | `start_time`, `end_time` | `time` | `HH:MM:SS` format |
 | `notes` | `text` | Optional |
+| `is_open` | `boolean` | `true` if shift has no assigned employee |
 | `recurring_shift_id` | `uuid` | FK → `recurring_shifts` (nullable) |
 
 ### `shift_breaks`
@@ -466,6 +562,62 @@ Migrations live in `libs/backend/database/migrations/` and are applied with `pnp
 | `notes` | `text` | Employee notes |
 | `review_notes` | `text` | Manager review notes |
 
+### `employee_availability`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` (cascade) |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `day_of_week` | `integer` | 0=Sun … 6=Sat |
+| `is_available` | `boolean` | Whether available that day |
+| `time_from`, `time_to` | `time` | Optional availability window |
+| `created_at`, `updated_at` | `timestamptz` | |
+
+Unique constraint on `(user_id, day_of_week)`.
+
+### `work_events`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` (cascade) |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `type` | `enum` | `arrival`, `departure`, `break_start`, `break_end`, `remote_arrival`, `business_trip_start`, `business_trip_end` |
+| `notes` | `text` | Optional |
+| `occurred_at` | `timestamptz` | When the event happened (default: now) |
+| `created_at` | `timestamptz` | When the record was inserted |
+
+### `event_change_requests`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` (requester, cascade) |
+| `organization_id` | `uuid` | FK → `organizations` |
+| `request_type` | `enum` | `add`, `edit`, `delete` |
+| `event_id` | `uuid` | FK → `work_events` (nullable, set null on delete) |
+| `requested_type` | `work_event_type` | Proposed event type (for add/edit) |
+| `requested_occurred_at` | `timestamptz` | Proposed timestamp |
+| `requested_notes` | `text` | Proposed notes |
+| `reason` | `text` | Why the change is needed |
+| `status` | `enum` | `pending`, `approved`, `rejected` |
+| `reviewed_by_user_id` | `uuid` | FK → `users` (nullable) |
+| `reviewed_at` | `timestamptz` | Nullable |
+| `review_notes` | `text` | Manager review notes |
+| `created_at` | `timestamptz` | |
+
+### `push_tokens`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` | FK → `users` (cascade) |
+| `token` | `varchar(512)` | Expo push token |
+| `created_at`, `updated_at` | `timestamptz` | |
+
+Unique constraint on `(user_id, token)`.
+
 ### `invitations`
 
 | Column | Type | Notes |
@@ -481,7 +633,7 @@ Migrations live in `libs/backend/database/migrations/` and are applied with `pnp
 
 ## Frontend Architecture
 
-### Routing (TanStack Router)
+### Routing (TanStack Router) — Manager Web
 
 ```
 /                       → redirect based on role
@@ -491,8 +643,24 @@ Migrations live in `libs/backend/database/migrations/` and are applied with `pnp
 /employees              → employee list (admin/hr/manager)
 /employees/:id          → employee profile + edit form
 /schedule               → weekly shift calendar (admin/hr/manager)
-/leave                  → manager leave: requests + balance grid
+/leave                  → manager leave: requests + balance grid (admin/hr/manager)
 /my-leave               → employee leave: balances + request form
+/my-history             → own work history + event timeline (all roles)
+/change-requests        → event change request review (admin/hr/manager)
+/sessions               → active session management
+```
+
+### Routing (Expo Router) — Employee Mobile
+
+```
+/                       → redirect → (app) or (auth)/login
+/(auth)/login           → login screen
+/(app)/_layout          → bottom tab navigator
+/(app)/shifts           → upcoming shifts
+/(app)/leaves           → leave balances + submit request
+/(app)/events           → clock in/out (work event logger)
+/(app)/history          → work history timeline
+/profile                → profile + logout
 ```
 
 ### Date & Time Formatting
@@ -684,4 +852,4 @@ A: Run `pnpm db:studio` to open Drizzle Studio.
 A: Open `http://localhost:8025` — Mailhog captures all SMTP traffic.
 
 **Q: How do I add a new leave type?**
-A: In the future a UI will exist for this. Currently: insert a row into `leave_types` with the desired `organization_id`, or update `seed.service.ts` and re-run `mise run seed`.
+A: In the future a UI will exist for this. Currently: insert a row into `leave_types` with the desired `organization_id`, or update `seed.service.ts` and re-run `pnpm seed`.
