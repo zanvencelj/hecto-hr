@@ -19,6 +19,7 @@
     "@hecto/shared-types": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-community/datetimepicker": "^8.3.1",
+    "@sentry/react-native": "^8.18.0",
     "@tanstack/react-query": "^5.100.5",
     "axios": "^1.6.0",
     "expo": "~56.0.5",

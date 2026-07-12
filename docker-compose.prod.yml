@@ -76,6 +76,23 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  backup:
+    image: postgres:17-alpine
+    <<: *default-logging
+    entrypoint: ["/bin/sh", "/scripts/nightly-loop.sh"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
+      BACKUP_RETENTION: ${BACKUP_RETENTION:-14}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+    volumes:
+      - db_backups:/backups
+      - ./scripts/backup/nightly-loop.sh:/scripts/nightly-loop.sh:ro
+      - ./libs/backend/database/scripts/backup.sh:/scripts/backup.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   # ── App ──────────────────────────────────────────────────────────────────────
 
   migrate:
@@ -125,6 +142,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET:-hectohr}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -156,6 +174,7 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_SECURE: ${SMTP_SECURE:-}
       SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

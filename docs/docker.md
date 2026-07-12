@@ -391,6 +391,72 @@ jobs:
           docker push hectohr:${{ github.sha }}
 ```
 
+## Backups & Disaster Recovery
+
+Two things write backups into the shared `db_backups` volume, both via `libs/backend/database/scripts/backup.sh`:
+
+- **Pre-deploy**: the `migrate` service runs `backup.sh` before every migration (`migrate-entrypoint.sh`) — a safety net around deploys.
+- **Nightly**: the `backup` service (`postgres:17-alpine` + `scripts/backup/nightly-loop.sh`) runs the same `backup.sh` once at container start, then every 24h at `BACKUP_HOUR` UTC (default `3`) — covers data changed *between* deploys.
+
+Both write `hectohr_<timestamp>.dump` files into one pool and share one retention rule: `BACKUP_RETENTION` (default `14`), oldest dumps pruned first once that count is exceeded.
+
+This is a same-box backup: it protects against accidental data deletion/corruption, but **not** against total VPS loss (disk failure, provider incident) since the dumps live on the same machine as Postgres. Copying `db_backups` to offsite storage (e.g. rclone → Backblaze B2/S3) is a good next step before scaling up.
+
+### Restoring from a backup (manual — test this before you need it)
+
+`libs/backend/database/scripts/restore.sh` does the actual restore (via `pg_restore --clean --if-exists`) against whatever `DATABASE_URL` points at, with a type-the-filename confirmation before it touches anything.
+
+```bash
+# 1. List available dumps
+docker compose -f docker-compose.prod.yml exec backup ls -la /backups
+
+# 2. Test-restore into a scratch database first — never restore over prod unverified
+docker compose -f docker-compose.prod.yml exec postgres createdb -U "$POSTGRES_USER" restore_test
+docker compose -f docker-compose.prod.yml run --rm \
+  -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/restore_test" \
+  migrate sh libs/backend/database/scripts/restore.sh /backups/hectohr_<timestamp>.dump
+
+# 3. Sanity-check row counts / spot-check a few tables
+docker compose -f docker-compose.prod.yml exec postgres psql -U "$POSTGRES_USER" -d restore_test -c "select count(*) from users;"
+
+# 4. Once verified, restore for real onto prod (stop the backend first so nothing writes mid-restore)
+docker compose -f docker-compose.prod.yml stop backend worker
+docker compose -f docker-compose.prod.yml run --rm migrate sh libs/backend/database/scripts/restore.sh /backups/hectohr_<timestamp>.dump
+docker compose -f docker-compose.prod.yml start backend worker
+
+# 5. Clean up the scratch database
+docker compose -f docker-compose.prod.yml exec postgres dropdb -U "$POSTGRES_USER" restore_test
+```
+
+Do steps 1–3 once right after deploying the `backup` service, so you know the dumps are actually restorable — a backup nobody has ever restored is not a backup.
+
+## Monitoring
+
+Three layers, each covering a blind spot the others miss:
+
+| Layer | Tool | Catches |
+|-------|------|---------|
+| Logs | Loki + Promtail + Grafana (`docker-compose.prod.yml`) | Searching/aggregating log lines across containers |
+| Errors | Sentry (`SENTRY_DSN` / `VITE_SENTRY_DSN`) | Unhandled exceptions with stack trace + request/user context, deduped and alertable |
+| Uptime | External monitor (not in this repo) | The VPS itself going dark — the one failure mode nothing *inside* the box can report |
+
+### Sentry
+
+Set `SENTRY_DSN` for the backend and `VITE_SENTRY_DSN` for the manager app (see `.env.example`). Leave unset in local dev — both SDKs no-op without a DSN. See `apps/backend/src/main.ts`, `apps/manager/src/main.tsx`, and the Expo apps' root layouts (`apps/employee/app/_layout.tsx`, `apps/visitor/app/_layout.tsx`) for where each SDK is initialized.
+
+For the employee/visitor mobile apps, set `EXPO_PUBLIC_SENTRY_DSN` before running an EAS build (`eas env:create` or the EAS dashboard) — `EXPO_PUBLIC_`-prefixed vars get inlined into the JS bundle at build time, so it must be present then, not just at runtime.
+
+### External uptime monitor
+
+Not automatable from this repo (it's a third-party account) — set this up manually once the backend is deployed:
+
+1. Sign up for a free monitor (e.g. [UptimeRobot](https://uptimerobot.com), [Better Uptime](https://betteruptime.com))
+2. Point it at `https://<your-domain>/api/health`, checking every 1–5 minutes
+3. Add your email (and SMS/Slack if the free tier allows) as the alert contact
+4. Optionally add a second monitor on the manager app's root URL to catch frontend-hosting outages separately from the API
+
+This is the only check that still fires if the whole VPS is unreachable — Grafana and Sentry both live on the same box and go dark with it.
+
 ## Production Checklist
 
 Before deploying to production:
@@ -403,6 +469,9 @@ Before deploying to production:
 - [ ] Set `REDIS_TLS=true` if using managed Redis (Upstash, ElastiCache)
 - [ ] Set `CORS_ORIGINS` to your actual frontend domain
 - [ ] Run `pnpm db:migrate` against the production database on each deploy
+- [ ] Confirm the `backup` service is running and do one manual restore test (see above)
+- [ ] Set `SENTRY_DSN` (backend) and `VITE_SENTRY_DSN` (manager) for error tracking
+- [ ] Set up an external uptime monitor against `/api/health` (see [Monitoring](#monitoring))
 
 ## Troubleshooting
 

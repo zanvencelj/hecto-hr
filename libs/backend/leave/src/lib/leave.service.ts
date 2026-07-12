@@ -18,7 +18,7 @@ import type { LeaveRequest, LeaveType } from '@hecto/database';
 
 const MANAGER_ROLES = ['admin', 'hr', 'manager'];
 
-function countWeekdays(startDate: string, endDate: string): number {
+export function countWeekdays(startDate: string, endDate: string): number {
   let count = 0;
   const current = new Date(startDate);
   const end = new Date(endDate);

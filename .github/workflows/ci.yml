@@ -41,6 +41,9 @@ jobs:
       - name: Build affected
         run: pnpm nx affected --target=build --base=origin/master --head=HEAD
 
+      - name: Test affected
+        run: pnpm nx affected --target=test --base=origin/master --head=HEAD
+
   db-migrations:
     name: Migration checks
     runs-on: ubuntu-latest

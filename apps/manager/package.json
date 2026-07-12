@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@fontsource-variable/space-grotesk": "^5.2.10"
+    "@fontsource-variable/space-grotesk": "^5.2.10",
+    "@sentry/react": "^10.65.0"
   }
 }
