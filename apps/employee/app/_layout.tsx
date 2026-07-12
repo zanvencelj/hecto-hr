@@ -12,13 +12,19 @@ import {
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Sentry from '@sentry/react-native';
 import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { usePreferencesStore } from '@/stores/preferences.store';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+const sentryDsn = process.env['EXPO_PUBLIC_SENTRY_DSN'];
+if (sentryDsn) {
+  Sentry.init({ dsn: sentryDsn, tracesSampleRate: 0.2 });
+}
+
+function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const hydratePrefs = usePreferencesStore((s) => s.hydrate);
 
@@ -56,3 +62,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);

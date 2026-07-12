@@ -10,7 +10,7 @@ import {
 } from '@hecto/database';
 import type { DaySummary, MonthlySummary, YearlySummary, DayState } from '@hecto/shared-types';
 
-function timeToMinutes(time: string): number {
+export function timeToMinutes(time: string): number {
   const [hStr, mStr] = time.split(':');
   const h = parseInt(hStr ?? '0', 10);
   const m = parseInt(mStr ?? '0', 10);
@@ -18,14 +18,14 @@ function timeToMinutes(time: string): number {
   return h * 60 + m;
 }
 
-function shiftDurationMinutes(startTime: string, endTime: string): number {
+export function shiftDurationMinutes(startTime: string, endTime: string): number {
   const start = timeToMinutes(startTime);
   const end = timeToMinutes(endTime);
   const mins = end - start;
   return mins < 0 ? mins + 24 * 60 : mins;
 }
 
-function computeWorkedMinutes(events: { type: string; occurredAt: Date }[]): number {
+export function computeWorkedMinutes(events: { type: string; occurredAt: Date }[]): number {
   const sorted = [...events].sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
   let workedMs = 0;
   let workStart: Date | null = null;
