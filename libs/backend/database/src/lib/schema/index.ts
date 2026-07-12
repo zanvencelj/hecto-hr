@@ -15,4 +15,6 @@ export * from './work-events.schema';
 export * from './event-change-requests.schema';
 export * from './employee-availability.schema';
 export * from './push-tokens.schema';
+export * from './kiosk-devices.schema';
+export * from './visits.schema';
 export * from './database.helpers';

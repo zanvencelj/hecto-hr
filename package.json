@@ -15,6 +15,12 @@
     "mobile:build:android": "pnpm --filter @hecto/employee build:android",
     "mobile:build:ios": "pnpm --filter @hecto/employee build:ios",
 
+    "visitor": "pnpm --filter @hecto/visitor start",
+    "visitor:android": "pnpm --filter @hecto/visitor android",
+    "visitor:ios": "pnpm --filter @hecto/visitor ios",
+    "visitor:build:android": "pnpm --filter @hecto/visitor build:android",
+    "visitor:build:ios": "pnpm --filter @hecto/visitor build:ios",
+
     "build": "nx run-many --target=build",
     "build:backend": "nx run backend:build",
     "build:manager": "nx run @hecto/manager:build",

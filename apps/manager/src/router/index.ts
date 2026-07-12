@@ -15,6 +15,8 @@ import { leaveManagerRoute } from './routes/leave/manager.route';
 import { leaveEmployeeRoute } from './routes/leave/employee.route';
 import { changeRequestsRoute } from './routes/change-requests.route';
 import { myHistoryRoute } from './routes/my-history.route';
+import { visitorsRoute } from './routes/visitors.route';
+import { kioskDevicesRoute } from './routes/kiosk-devices.route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -28,6 +30,8 @@ const routeTree = rootRoute.addChildren([
   leaveEmployeeRoute,
   changeRequestsRoute,
   myHistoryRoute,
+  visitorsRoute,
+  kioskDevicesRoute,
   authLayoutRoute.addChildren([loginRoute, registerRoute]),
 ]);
 

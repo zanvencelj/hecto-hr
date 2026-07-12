@@ -32,6 +32,7 @@ x-app-dev: &app-dev
     SMTP_PORT: 1025
     SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
     MINIO_ENDPOINT: http://minio:9000
+    MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
     MINIO_BUCKET: ${MINIO_BUCKET:-hectohr}
@@ -133,6 +134,7 @@ services:
       SMTP_PORT: 1025
       SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
       MINIO_BUCKET: ${MINIO_BUCKET:-hectohr}

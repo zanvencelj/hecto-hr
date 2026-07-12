@@ -125,6 +125,7 @@ function ScheduleManagerPage() {
   const shiftsByEmployee = useMemo(() => {
     const map = new Map<string, ShiftPublic[]>();
     shifts?.forEach((s) => {
+      if (!s.userId) return;
       const arr = map.get(s.userId) ?? [];
       arr.push(s);
       map.set(s.userId, arr);
@@ -146,6 +147,7 @@ function ScheduleManagerPage() {
   const weeklyHours = useMemo(() => {
     const map = new Map<string, number>();
     shifts?.forEach((s) => {
+      if (!s.userId) return;
       const h = shiftDurationHours(s);
       map.set(s.userId, (map.get(s.userId) ?? 0) + h);
     });

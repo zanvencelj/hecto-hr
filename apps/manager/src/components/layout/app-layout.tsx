@@ -18,6 +18,8 @@ function useNavItems(): NavItem[] {
       { to: '/schedule', label: 'Schedule' },
       { to: '/leave', label: 'Leave' },
       { to: '/change-requests', label: 'Change Requests' },
+      { to: '/visitors', label: 'Visitors' },
+      ...(role === 'admin' ? [{ to: '/kiosk-devices', label: 'Kiosk Devices' }] : []),
     ];
   }
   return [

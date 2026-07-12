@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  Text {
+    @apply font-sans;
+  }
+  TextInput {
+    @apply font-sans;
+  }
+}

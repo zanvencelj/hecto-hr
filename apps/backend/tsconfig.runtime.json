@@ -5,10 +5,10 @@
   },
   "references": [
     {
-      "path": "../../libs/backend/events/tsconfig.lib.json"
+      "path": "../../libs/backend/visits/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/backend/reports/tsconfig.lib.json"
+      "path": "../../libs/backend/events/tsconfig.lib.json"
     },
     {
       "path": "../../libs/backend/leave/tsconfig.lib.json"
@@ -33,6 +33,9 @@
     },
     {
       "path": "../../libs/backend/mail/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/reports/tsconfig.lib.json"
     },
     {
       "path": "../../libs/backend/database/tsconfig.lib.json"
