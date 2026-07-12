@@ -17,20 +17,6 @@
       "breakpoints": true
     },
     {
-      "idx": 2,
-      "version": "7",
-      "when": 1746230400000,
-      "tag": "0002_tenancy_roles_softdelete",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1746316800000,
-      "tag": "0003_password_resets",
-      "breakpoints": true
-    },
-    {
       "idx": 4,
       "version": "7",
       "when": 1777739285746,
@@ -75,8 +61,8 @@
     {
       "idx": 10,
       "version": "7",
-      "when": 1780000000000,
-      "tag": "0010_event_change_requests",
+      "when": 1783802600970,
+      "tag": "0010_clumsy_lucky_pierre",
       "breakpoints": true
     }
   ]

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { secureStorage as SecureStore } from '../lib/secure-storage';
 import type { UserPublic } from '@hecto/shared-types';
 
 const REFRESH_TOKEN_KEY = 'hecto_refresh_token';

@@ -116,7 +116,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    restart: on-failure
+    restart: on-failure:3
 
   backend:
     <<: *app-dev

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { secureStorage as SecureStore } from '../lib/secure-storage';
 import type { WorkEventType } from '@hecto/shared-types';
 
 const KEY = 'hecto_button_prefs';

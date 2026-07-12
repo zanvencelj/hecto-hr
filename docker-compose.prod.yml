@@ -87,10 +87,12 @@ services:
     <<: *default-logging
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
+    volumes:
+      - db_backups:/backups
     depends_on:
       postgres:
         condition: service_healthy
-    restart: on-failure
+    restart: on-failure:3
 
   backend:
     <<: *backend-build
@@ -225,6 +227,7 @@ services:
 
 volumes:
   postgres_data:
+  db_backups:
   redis_data:
   minio_data:
   loki_data:

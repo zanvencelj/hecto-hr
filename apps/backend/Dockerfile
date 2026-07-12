@@ -7,6 +7,7 @@ RUN corepack enable
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY patches ./patches
 COPY apps/backend/package.json apps/backend/package.json
 COPY libs/backend/auth/package.json libs/backend/auth/package.json
 COPY libs/backend/database/package.json libs/backend/database/package.json
@@ -37,10 +38,14 @@ RUN pnpm nx sync && \
 
 # ---- migrator stage (used by docker-compose.prod.yml migrate service) ----
 FROM deps AS migrator
+# Version-matched to the postgres:17-alpine server image so pg_dump/pg_restore stay compatible
+RUN apk add --no-cache postgresql17-client
 WORKDIR /app
 COPY drizzle.config.ts ./
 COPY libs/backend/database/migrations ./libs/backend/database/migrations
-CMD ["pnpm", "db:migrate"]
+COPY libs/backend/database/scripts ./libs/backend/database/scripts
+RUN chmod +x libs/backend/database/scripts/*.sh
+CMD ["libs/backend/database/scripts/migrate-entrypoint.sh"]
 
 # ---- runner stage ----
 FROM base AS runner

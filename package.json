@@ -42,6 +42,11 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:backup": "sh libs/backend/database/scripts/backup.sh",
+    "db:restore": "sh libs/backend/database/scripts/restore.sh",
+    "db:revert": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register libs/backend/database/scripts/revert.ts",
+    "db:check-drift": "sh libs/backend/database/scripts/check-drift.sh",
+    "db:check-down-migrations": "node libs/backend/database/scripts/check-down-migrations.js",
     "seed": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register apps/backend/src/seed/seed.ts"
   },
   "private": true,
