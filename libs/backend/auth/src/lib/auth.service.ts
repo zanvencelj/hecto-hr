@@ -82,6 +82,13 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid email or password');
     if (!user.isActive) throw new ForbiddenException('Account is disabled');
 
+    if (user.organizationId) {
+      const org = await this.organizationsRepository.findById(user.organizationId);
+      if (!org || org.deletedAt || !org.isActive) {
+        throw new ForbiddenException('Organization is disabled');
+      }
+    }
+
     const expiresAt = new Date(Date.now() + this.refreshExpiryMs);
     const session = await this.sessionsRepository.create({
       userId: user.id,

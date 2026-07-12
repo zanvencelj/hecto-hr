@@ -6,7 +6,9 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictNullChecks": true,
@@ -30,5 +32,9 @@
     {
       "path": "../../shared/types/tsconfig.lib.json"
     }
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
   ]
 }

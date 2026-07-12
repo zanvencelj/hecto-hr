@@ -1,0 +1,11 @@
+{
+  "name": "@hecto/admin-app",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "admin-app"
+  },
+  "dependencies": {
+    "@fontsource-variable/space-grotesk": "^5.2.10"
+  }
+}

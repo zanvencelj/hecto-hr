@@ -17,4 +17,5 @@ export * from './employee-availability.schema';
 export * from './push-tokens.schema';
 export * from './kiosk-devices.schema';
 export * from './visits.schema';
+export * from './admin-audit-logs.schema';
 export * from './database.helpers';

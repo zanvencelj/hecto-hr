@@ -8,6 +8,7 @@
     "dev:backend": "nx run backend:serve",
     "dev:worker": "nx run backend:serve-worker",
     "dev:manager": "nx run @hecto/manager:serve",
+    "dev:admin": "nx run admin-app:serve",
 
     "mobile": "pnpm --filter @hecto/employee start",
     "mobile:android": "pnpm --filter @hecto/employee android",
@@ -53,7 +54,8 @@
     "db:revert": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register libs/backend/database/scripts/revert.ts",
     "db:check-drift": "sh libs/backend/database/scripts/check-drift.sh",
     "db:check-down-migrations": "node libs/backend/database/scripts/check-down-migrations.js",
-    "seed": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register apps/backend/src/seed/seed.ts"
+    "seed": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register apps/backend/src/seed/seed.ts",
+    "superadmin:create": "SWC_NODE_PROJECT=apps/backend/tsconfig.runtime.json node --require @swc-node/register apps/backend/src/seed/create-superadmin.ts"
   },
   "private": true,
   "devDependencies": {
