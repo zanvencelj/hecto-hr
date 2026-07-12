@@ -244,13 +244,11 @@ interface MonthlyViewProps {
   year: number;
   month: number;
   summaryEndpoint: string;
-  shiftsEndpoint: string;
-  eventsEndpoint: string;
   onBack: () => void;
   onDayClick: (date: string) => void;
 }
 
-function MonthlyView({ year, month, summaryEndpoint, shiftsEndpoint, eventsEndpoint, onBack, onDayClick }: MonthlyViewProps) {
+function MonthlyView({ year, month, summaryEndpoint, onBack, onDayClick }: MonthlyViewProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -461,8 +459,6 @@ export function HistoryView({ summaryEndpoint, shiftsEndpoint, eventsEndpoint }:
           year={year}
           month={month}
           summaryEndpoint={summaryEndpoint}
-          shiftsEndpoint={shiftsEndpoint}
-          eventsEndpoint={eventsEndpoint}
           onBack={() => setView('year')}
           onDayClick={(d) => { setDay(d); setView('day'); }}
         />
