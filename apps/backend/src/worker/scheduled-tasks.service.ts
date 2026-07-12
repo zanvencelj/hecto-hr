@@ -36,4 +36,23 @@ export class ScheduledTasksService {
     );
     this.logger.debug(`Purged expired sessions: ${result.rowCount ?? 0} rows`);
   }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async purgeExpiredKioskPairingCodes(): Promise<void> {
+    const result = await this.db.execute(
+      sql`DELETE FROM kiosk_pairing_codes WHERE expires_at < now()`,
+    );
+    this.logger.debug(`Purged expired kiosk pairing codes: ${result.rowCount ?? 0} rows`);
+  }
+
+  /** Visitors who forgot to sign out get closed overnight; auto_closed_at marks them. */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async autoCloseStaleVisits(): Promise<void> {
+    const result = await this.db.execute(
+      sql`UPDATE visits
+          SET signed_out_at = now(), auto_closed_at = now(), updated_at = now()
+          WHERE signed_out_at IS NULL AND signed_in_at < date_trunc('day', now())`,
+    );
+    this.logger.log(`Auto-closed stale visits: ${result.rowCount ?? 0} rows`);
+  }
 }

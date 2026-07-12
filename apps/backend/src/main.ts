@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
@@ -7,8 +8,14 @@ import helmet from 'helmet';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+    rawBody: false,
+  });
   app.useLogger(app.get(Logger));
+
+  // Kiosk signature uploads send base64 PNGs; the express default (100kb) is too small
+  app.useBodyParser('json', { limit: '4mb' });
 
   app.enableShutdownHooks();
 
@@ -17,7 +24,7 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  const rawOrigins = process.env['CORS_ORIGINS'] ?? 'http://localhost:4200,http://localhost:8081';
+  const rawOrigins = process.env['CORS_ORIGINS'] ?? 'http://localhost:4200,http://localhost:8081,http://localhost:8082';
   const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
 
   app.enableCors({

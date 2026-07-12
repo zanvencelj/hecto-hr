@@ -64,6 +64,13 @@
       "when": 1783802600970,
       "tag": "0010_clumsy_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783843174494,
+      "tag": "0011_pretty_maddog",
+      "breakpoints": true
     }
   ]
 }

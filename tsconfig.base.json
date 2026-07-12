@@ -33,6 +33,7 @@
       "@hecto/leave": ["./libs/backend/leave/src/index.ts"],
       "@hecto/events": ["./libs/backend/events/src/index.ts"],
       "@hecto/reports": ["./libs/backend/reports/src/index.ts"],
+      "@hecto/visits": ["./libs/backend/visits/src/index.ts"],
       "@hecto/ui": ["./libs/shared/ui/src/index.ts"],
       "@hecto/ui-native": ["./libs/shared/ui-native/src/index.ts"],
       "@hecto/api-client": ["./libs/shared/api-client/src/index.ts"],

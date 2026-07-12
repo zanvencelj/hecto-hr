@@ -14,6 +14,7 @@ import { ShiftsModule } from '@hecto/shifts';
 import { LeaveModule } from '@hecto/leave';
 import { EventsModule } from '@hecto/events';
 import { ReportsModule } from '@hecto/reports';
+import { VisitsModule } from '@hecto/visits';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
@@ -43,6 +44,7 @@ import { validateEnv } from '../env.validation';
     LeaveModule,
     EventsModule,
     ReportsModule,
+    VisitsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

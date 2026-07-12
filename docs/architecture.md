@@ -97,6 +97,21 @@ hectohr/
 │   │   ├── app.json                          # Expo app config
 │   │   └── eas.json                          # EAS Build profiles (development, preview, production)
 │   │
+│   ├── visitor/                              # React Native + Expo (tablet kiosk, landscape)
+│   │   ├── app/
+│   │   │   ├── _layout.tsx                   # Root layout (fonts, providers, 60s idle reset)
+│   │   │   ├── index.tsx                     # Home — Sign in / Sign out buttons (or → /pair)
+│   │   │   ├── pair.tsx                      # Device pairing (6-digit code → device token)
+│   │   │   ├── sign-in.tsx                   # Visitor form (name, purpose) + signature pad
+│   │   │   └── sign-out.tsx                  # Open-visit list (10s polling) + confirm
+│   │   ├── src/
+│   │   │   ├── components/SignaturePad.tsx   # Signature canvas (webview native / canvas web)
+│   │   │   ├── lib/api.ts                    # Axios client with device-token auth
+│   │   │   ├── services/kiosk.service.ts     # /kiosk/* API calls
+│   │   │   └── stores/device.store.ts        # Zustand + secure-store device token persistence
+│   │   ├── app.json                          # Expo config (landscape, tablets)
+│   │   └── eas.json                          # EAS Build profiles
+│   │
 │   └── manager/                              # React SPA (port 4200)
 │       └── src/
 │           ├── main.tsx                      # React entry point
@@ -123,6 +138,8 @@ hectohr/
 │           │   ├── schedule/
 │           │   │   └── manager.route.tsx      # /schedule — weekly calendar (manager)
 │           │   ├── change-requests.route.tsx  # /change-requests — event change request review
+│           │   ├── visitors.route.tsx         # /visitors — live visitor list + history + signatures
+│           │   ├── kiosk-devices.route.tsx    # /kiosk-devices — pair/rename/revoke kiosks (admin)
 │           │   └── my-history.route.tsx       # /my-history — own work history
 │           └── stores/
 │               └── auth.store.ts             # Zustand auth state
@@ -159,7 +176,9 @@ hectohr/
 │   │   │       ├── push-tokens.schema.ts
 │   │   │       ├── leave-types.schema.ts
 │   │   │       ├── leave-balances.schema.ts
-│   │   │       └── leave-requests.schema.ts
+│   │   │       ├── leave-requests.schema.ts
+│   │   │       ├── kiosk-devices.schema.ts
+│   │   │       └── visits.schema.ts
 │   │   │
 │   │   ├── employees/                        # @hecto/employees
 │   │   │   └── src/lib/
@@ -204,6 +223,17 @@ hectohr/
 │   │   │   └── src/lib/
 │   │   │       ├── reports.module.ts
 │   │   │       └── reports.controller.ts     # /reports endpoints (work history summaries)
+│   │   │
+│   │   ├── visits/                           # @hecto/visits
+│   │   │   └── src/lib/
+│   │   │       ├── visits.module.ts
+│   │   │       ├── visits.service.ts         # Pairing, visitor sign-in/out, signatures → MinIO
+│   │   │       ├── visits.controller.ts      # /visits (staff) + /kiosk-devices (admin) endpoints
+│   │   │       ├── kiosk.controller.ts       # /kiosk/* endpoints (device-token auth)
+│   │   │       ├── visits.repository.ts
+│   │   │       ├── kiosk-devices.repository.ts
+│   │   │       └── guards/
+│   │   │           └── kiosk-auth.guard.ts   # Authenticates paired kiosk tablets
 │   │   │
 │   │   ├── shifts/                           # @hecto/shifts
 │   │   │   └── src/lib/
@@ -287,6 +317,7 @@ hectohr/
 
 apps/manager  ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui
 apps/employee ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui-native
+apps/visitor  ──── @hecto/api-client, @hecto/schemas, @hecto/shared-types, @hecto/ui-native
 
 @hecto/database              (no local deps)
        ↑
@@ -302,10 +333,12 @@ apps/employee ──── @hecto/api-client, @hecto/schemas, @hecto/shared-type
 @hecto/shifts    ── @hecto/database, @hecto/shared-types
 @hecto/leave     ── @hecto/database, @hecto/shared-types
 @hecto/events    ── @hecto/database, @hecto/shared-types
+@hecto/visits    ── @hecto/database, @hecto/auth, @hecto/storage, @hecto/shared-types
 @hecto/reports   ── @hecto/database, @hecto/shifts, @hecto/events
        ↑
 apps/backend ──── @hecto/auth, @hecto/database, @hecto/employees, @hecto/events,
-                  @hecto/leave, @hecto/queue, @hecto/reports, @hecto/shifts, @hecto/users
+                  @hecto/leave, @hecto/queue, @hecto/reports, @hecto/shifts, @hecto/users,
+                  @hecto/visits
 ```
 
 ## Authentication & RBAC Architecture

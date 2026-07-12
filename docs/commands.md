@@ -15,6 +15,11 @@ Complete list of all available tasks and commands.
 | Mobile iOS | `pnpm mobile:ios` | Open on iOS simulator |
 | Build mobile (Android) | `pnpm mobile:build:android` | EAS cloud build for Android |
 | Build mobile (iOS) | `pnpm mobile:build:ios` | EAS cloud build for iOS |
+| Start visitor kiosk app | `pnpm visitor` | Expo dev server (tablet kiosk; web supported) |
+| Visitor kiosk Android | `pnpm visitor:android` | Open on Android simulator |
+| Visitor kiosk iOS | `pnpm visitor:ios` | Open on iOS simulator |
+| Build visitor kiosk (Android) | `pnpm visitor:build:android` | EAS cloud build for Android |
+| Build visitor kiosk (iOS) | `pnpm visitor:build:ios` | EAS cloud build for iOS |
 | Run tests | `pnpm test` | All unit tests (all projects) |
 | Test affected | `pnpm test:affected` | Tests for changed projects only |
 | Lint code | `pnpm lint` | Run ESLint on all projects |
