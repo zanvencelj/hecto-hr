@@ -9,6 +9,8 @@ const dto = { email: 'admin@hecto.io', password: 'pw' };
 function makeService(user: { role: string } | null) {
   const authService = {
     login: jest.fn().mockResolvedValue({ accessToken: 'token' }),
+    refresh: jest.fn().mockResolvedValue({ accessToken: 'refreshed' }),
+    logout: jest.fn().mockResolvedValue(undefined),
   };
   const usersService = {
     findByEmail: jest.fn().mockResolvedValue(user),
@@ -37,6 +39,20 @@ describe('AdminAuthService.login', () => {
     const { service, authService } = makeService({ role: 'superadmin' });
     const result = await service.login(dto, req, res);
     expect(result).toEqual({ accessToken: 'token' });
-    expect(authService.login).toHaveBeenCalledWith(dto, req, res);
+    expect(authService.login).toHaveBeenCalledWith(dto, req, res, 'admin');
+  });
+});
+
+describe('AdminAuthService refresh/logout', () => {
+  it('scopes token refresh to the admin cookie namespace', async () => {
+    const { service, authService } = makeService(null);
+    await service.refresh(req, res);
+    expect(authService.refresh).toHaveBeenCalledWith(req, res, undefined, 'admin');
+  });
+
+  it('scopes logout to the admin cookie namespace', async () => {
+    const { service, authService } = makeService(null);
+    await service.logout(req, res);
+    expect(authService.logout).toHaveBeenCalledWith(req, res, undefined, 'admin');
   });
 });

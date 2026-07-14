@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 
 export class PaginationQueryDto {
   @IsOptional()
@@ -16,4 +16,10 @@ export class PaginationQueryDto {
   @IsString()
   @MaxLength(255)
   search?: string;
+}
+
+export class ListUsersQueryDto extends PaginationQueryDto {
+  @IsOptional()
+  @IsUUID()
+  organizationId?: string;
 }

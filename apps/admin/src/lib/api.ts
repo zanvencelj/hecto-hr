@@ -7,4 +7,6 @@ setupAuthInterceptors(apiClient, {
   getAccessToken: () => useAuthStore.getState().accessToken,
   onTokenRefreshed: (token) => useAuthStore.getState().refreshAuth(token),
   onAuthFailure: () => useAuthStore.getState().clearAuth(),
+  refreshEndpoint: '/admin/auth/refresh',
+  noRetryEndpoints: ['/admin/auth/logout'],
 });

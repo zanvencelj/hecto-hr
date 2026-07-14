@@ -31,7 +31,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
     // Silently refresh the access token on cold start if a user profile is cached
     if (user && !isAuthenticated) {
       try {
-        const { data } = await apiClient.post<RefreshResponse>('/auth/refresh');
+        const { data } = await apiClient.post<RefreshResponse>('/admin/auth/refresh');
         useAuthStore.getState().refreshAuth(data.accessToken);
       } catch {
         useAuthStore.getState().clearAuth();

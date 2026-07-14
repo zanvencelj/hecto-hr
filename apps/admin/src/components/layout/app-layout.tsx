@@ -21,7 +21,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   async function handleLogout() {
     try {
-      await apiClient.post('/auth/logout');
+      await apiClient.post('/admin/auth/logout');
     } catch {
       // server clears cookies regardless
     } finally {

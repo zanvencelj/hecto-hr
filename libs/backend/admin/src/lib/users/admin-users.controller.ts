@@ -20,7 +20,7 @@ import type {
   Paginated,
 } from '@hecto/shared-types';
 import { AdminUsersService } from './admin-users.service';
-import { PaginationQueryDto } from '../dto/pagination.dto';
+import { ListUsersQueryDto } from '../dto/pagination.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Controller('admin/users')
@@ -30,11 +30,8 @@ export class AdminUsersController {
   constructor(private readonly usersService: AdminUsersService) {}
 
   @Get()
-  list(
-    @Query() query: PaginationQueryDto,
-    @Query('organizationId') organizationId?: string,
-  ): Promise<Paginated<AdminUser>> {
-    return this.usersService.list(query.limit ?? 50, query.offset ?? 0, query.search, organizationId);
+  list(@Query() query: ListUsersQueryDto): Promise<Paginated<AdminUser>> {
+    return this.usersService.list(query.limit ?? 50, query.offset ?? 0, query.search, query.organizationId);
   }
 
   @Get(':id')

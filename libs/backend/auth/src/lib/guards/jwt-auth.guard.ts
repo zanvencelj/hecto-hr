@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { AccessTokenPayload } from '@hecto/shared-types';
 import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { ACCESS_TOKEN_COOKIE, ADMIN_ACCESS_TOKEN_COOKIE } from '../cookie-names';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -40,10 +41,15 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private extractToken(request: Request): string | undefined {
-    const fromCookie = (request.cookies as Record<string, string> | undefined)?.['access_token'];
-    if (fromCookie) return fromCookie;
+    // SPA clients always attach the in-memory token as a Bearer header — trust it
+    // over any cookie, since both the admin and manager apps share one cookie jar
+    // (same backend origin, port isn't part of cookie scoping) and a stale cookie
+    // from the other app must never override the caller's own token.
+    const [type, headerToken] = request.headers.authorization?.split(' ') ?? [];
+    if (type === 'Bearer' && headerToken) return headerToken;
 
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    const isAdminRoute = request.path.startsWith('/api/admin/');
+    const cookieName = isAdminRoute ? ADMIN_ACCESS_TOKEN_COOKIE : ACCESS_TOKEN_COOKIE;
+    return (request.cookies as Record<string, string> | undefined)?.[cookieName];
   }
 }
