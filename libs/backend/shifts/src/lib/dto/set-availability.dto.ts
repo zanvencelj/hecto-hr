@@ -1,4 +1,5 @@
-import { IsBoolean, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import type { AvailabilityPreference } from '@hecto/shared-types';
 
 export class SetAvailabilityDto {
   @IsInt()
@@ -6,8 +7,8 @@ export class SetAvailabilityDto {
   @Max(6)
   dayOfWeek!: number;
 
-  @IsBoolean()
-  isAvailable!: boolean;
+  @IsEnum(['preferred', 'available', 'unavailable'])
+  preference!: AvailabilityPreference;
 
   @IsOptional()
   @IsString()

@@ -7,3 +7,4 @@ export * from './lib/events.types';
 export * from './lib/reports.types';
 export * from './lib/visits.types';
 export * from './lib/admin.types';
+export * from './lib/scheduling.types';

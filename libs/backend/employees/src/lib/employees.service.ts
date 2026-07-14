@@ -53,7 +53,7 @@ export class EmployeesService {
     const employee = await this.employeesRepo.findByIdInOrg(id, organizationId);
     if (!employee) throw new NotFoundException('Employee not found');
 
-    const { firstName, lastName, role, isActive, position, department, phone, hireDate, notes } =
+    const { firstName, lastName, role, isActive, position, department, phone, hireDate, maxHoursPerWeek, notes } =
       dto;
 
     if (firstName !== undefined || lastName !== undefined || role !== undefined || isActive !== undefined) {
@@ -65,9 +65,17 @@ export class EmployeesService {
       department !== undefined ||
       phone !== undefined ||
       hireDate !== undefined ||
+      maxHoursPerWeek !== undefined ||
       notes !== undefined
     ) {
-      await this.employeesRepo.updateProfile(id, { position, department, phone, hireDate, notes });
+      await this.employeesRepo.updateProfile(id, {
+        position,
+        department,
+        phone,
+        hireDate,
+        maxHoursPerWeek,
+        notes,
+      });
     }
 
     const updated = await this.employeesRepo.findByIdInOrg(id, organizationId);
@@ -193,6 +201,7 @@ export class EmployeesService {
       department: string | null;
       phone: string | null;
       hireDate: string | null;
+      maxHoursPerWeek: number | null;
       notes: string | null;
       emergencyContact: { name: string; phone: string; relationship: string } | null;
     } | null;
@@ -211,6 +220,7 @@ export class EmployeesService {
       department: employee.profile?.department ?? null,
       phone: employee.profile?.phone ?? null,
       hireDate: employee.profile?.hireDate ?? null,
+      maxHoursPerWeek: employee.profile?.maxHoursPerWeek ?? null,
       notes: employee.profile?.notes ?? null,
       emergencyContact: employee.profile?.emergencyContact ?? null,
     };

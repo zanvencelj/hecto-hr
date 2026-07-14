@@ -1,6 +1,14 @@
-import { pgTable, uuid, integer, boolean, time, timestamp, unique } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, uuid, integer, time, timestamp, unique } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations.schema';
 import { users } from './users.schema';
+
+export const availabilityPreferenceEnum = pgEnum('availability_preference', [
+  'preferred',
+  'available',
+  'unavailable',
+]);
+
+export type AvailabilityPreference = (typeof availabilityPreferenceEnum.enumValues)[number];
 
 export const employeeAvailability = pgTable(
   'employee_availability',
@@ -13,7 +21,7 @@ export const employeeAvailability = pgTable(
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
     dayOfWeek: integer('day_of_week').notNull(),
-    isAvailable: boolean('is_available').notNull().default(true),
+    preference: availabilityPreferenceEnum('preference').notNull().default('available'),
     timeFrom: time('time_from'),
     timeTo: time('time_to'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

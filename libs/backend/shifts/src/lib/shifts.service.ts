@@ -209,6 +209,12 @@ export class ShiftsService {
   }
 
   async claimShift(id: string, currentUser: AccessTokenPayload): Promise<ShiftPublic> {
+    const blocked = await this.shiftsRepo.isClaimingBlockedByDraft(currentUser.organizationId);
+    if (blocked) {
+      throw new ConflictException(
+        'Shift claiming is paused while a schedule draft is under review',
+      );
+    }
     const claimed = await this.shiftsRepo.claimShift(id, currentUser.sub);
     if (!claimed) throw new ConflictException('Shift is no longer available');
     return this.toPublic({ ...claimed, breaks: [] });
@@ -222,7 +228,7 @@ export class ShiftsService {
       userId: currentUser.sub,
       organizationId: currentUser.organizationId,
       dayOfWeek: dto.dayOfWeek,
-      isAvailable: dto.isAvailable,
+      preference: dto.preference,
       timeFrom: dto.timeFrom ?? null,
       timeTo: dto.timeTo ?? null,
     });

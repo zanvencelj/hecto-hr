@@ -2,13 +2,17 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { MailService } from '@hecto/mail';
-import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData, type SendPasswordResetEmailData, type SendInvitationEmailData } from '../queue.constants';
+import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData, type SendPasswordResetEmailData, type SendInvitationEmailData, type SendSchedulePublishedData } from '../queue.constants';
+import { PushService } from '../push.service';
 
 @Processor(TASKS_QUEUE, { concurrency: 5 })
 export class TasksProcessor extends WorkerHost {
   private readonly logger = new Logger(TasksProcessor.name);
 
-  constructor(private readonly mailService: MailService) {
+  constructor(
+    private readonly mailService: MailService,
+    private readonly pushService: PushService,
+  ) {
     super();
   }
 
@@ -38,6 +42,26 @@ export class TasksProcessor extends WorkerHost {
           data.organizationName,
           data.inviterName,
         );
+        break;
+      }
+      case JOB_NAMES.SEND_SCHEDULE_PUBLISHED: {
+        const data = job.data as SendSchedulePublishedData;
+        // Push when the user has registered devices; email as the fallback floor.
+        if (data.pushTokens.length > 0) {
+          await this.pushService.sendPush(
+            data.pushTokens,
+            'New schedule published',
+            `You have ${data.shiftCount} shift${data.shiftCount === 1 ? '' : 's'} between ${data.dateFrom} and ${data.dateTo}.`,
+          );
+        } else {
+          await this.mailService.sendSchedulePublishedEmail(
+            data.email,
+            data.firstName,
+            data.shiftCount,
+            data.dateFrom,
+            data.dateTo,
+          );
+        }
         break;
       }
       default:

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import type { AvailabilityPreference } from '@hecto/shared-types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@hecto/ui-native';
@@ -188,18 +189,33 @@ export default function ShiftsScreen() {
             ) : (
               DAYS.map((day, idx) => {
                 const entry = availabilityMap[idx];
-                const isAvailable = entry?.isAvailable ?? true;
+                const preference: AvailabilityPreference = entry?.preference ?? 'available';
                 return (
-                  <Card key={idx} className="flex-row items-center justify-between">
+                  <Card key={idx} className="gap-2">
                     <Text className="font-medium text-gray-800">{day}</Text>
-                    <Switch
-                      value={isAvailable}
-                      onValueChange={(val) =>
-                        availabilityMutation.mutate({ dayOfWeek: idx, isAvailable: val })
-                      }
-                      trackColor={{ true: '#2563eb', false: '#d1d5db' }}
-                      thumbColor="#ffffff"
-                    />
+                    <View className="flex-row border border-gray-200 rounded overflow-hidden">
+                      {(
+                        [
+                          ['preferred', 'Prefer', 'bg-green-600'],
+                          ['available', 'Available', 'bg-blue-600'],
+                          ['unavailable', 'Off', 'bg-gray-500'],
+                        ] as [AvailabilityPreference, string, string][]
+                      ).map(([value, label, activeBg]) => (
+                        <TouchableOpacity
+                          key={value}
+                          onPress={() =>
+                            availabilityMutation.mutate({ dayOfWeek: idx, preference: value })
+                          }
+                          className={`flex-1 py-2 items-center ${preference === value ? activeBg : 'bg-white'}`}
+                        >
+                          <Text
+                            className={`text-xs font-medium ${preference === value ? 'text-white' : 'text-gray-500'}`}
+                          >
+                            {label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   </Card>
                 );
               })

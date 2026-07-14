@@ -16,6 +16,7 @@ function useNavItems(): NavItem[] {
     return [
       { to: '/employees', label: 'Employees' },
       { to: '/schedule', label: 'Schedule' },
+      { to: '/auto-schedule', label: 'Auto-Schedule' },
       { to: '/leave', label: 'Leave' },
       { to: '/change-requests', label: 'Change Requests' },
       { to: '/visitors', label: 'Visitors' },

@@ -65,6 +65,9 @@
     },
     {
       "path": "./apps/admin"
+    },
+    {
+      "path": "./libs/backend/scheduling"
     }
   ]
 }

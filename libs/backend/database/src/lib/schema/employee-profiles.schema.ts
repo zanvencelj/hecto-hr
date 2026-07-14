@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, date, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, date, text, timestamp, jsonb, integer } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations.schema';
 import { users } from './users.schema';
 import { invitations } from './invitations.schema';
@@ -19,6 +19,7 @@ export const employeeProfiles = pgTable('employee_profiles', {
   department: varchar('department', { length: 150 }),
   phone: varchar('phone', { length: 50 }),
   hireDate: date('hire_date'),
+  maxHoursPerWeek: integer('max_hours_per_week'),
   emergencyContact: jsonb('emergency_contact').$type<{
     name: string;
     phone: string;

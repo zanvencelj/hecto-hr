@@ -64,6 +64,7 @@ function EmployeeDetailPage() {
       department: emp.department ?? '',
       phone: emp.phone ?? '',
       hireDate: emp.hireDate ?? '',
+      maxHoursPerWeek: emp.maxHoursPerWeek,
       notes: emp.notes ?? '',
     });
     setEditing(true);
@@ -242,6 +243,21 @@ function EmployeeDetailPage() {
                     onChange={(v) => setForm((f) => ({ ...f, hireDate: v }))}
                   />
                 </FormField>
+                <FormField label="Max hours / week (scheduling)">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={168}
+                    placeholder="Org default"
+                    value={form.maxHoursPerWeek ?? ''}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        maxHoursPerWeek: e.target.value === '' ? null : Number(e.target.value),
+                      }))
+                    }
+                  />
+                </FormField>
                 <FormField label="Notes" className="sm:col-span-2">
                   <Textarea
                     value={form.notes ?? ''}
@@ -268,6 +284,10 @@ function EmployeeDetailPage() {
                 <InfoRow label="Department" value={employee.department} />
                 <InfoRow label="Phone" value={employee.phone} />
                 <InfoRow label="Hire date" value={fmtDate(employee.hireDate)} />
+                <InfoRow
+                  label="Max hours / week"
+                  value={employee.maxHoursPerWeek ? `${employee.maxHoursPerWeek}h` : null}
+                />
                 <InfoRow label="Date joined" value={fmtDate(employee.dateJoined)} />
                 <InfoRow
                   label="Last login"

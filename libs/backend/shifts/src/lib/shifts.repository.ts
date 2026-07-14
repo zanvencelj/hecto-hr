@@ -15,6 +15,8 @@ import {
   employeeAvailability,
   type EmployeeAvailability,
   type NewEmployeeAvailability,
+  scheduleDrafts,
+  schedulingSettings,
 } from '@hecto/database';
 
 export interface ShiftWithBreaks extends Shift {
@@ -182,6 +184,25 @@ export class ShiftsRepository {
       );
   }
 
+  /** True when an active draft exists and org settings disable claiming during a draft. */
+  async isClaimingBlockedByDraft(organizationId: string): Promise<boolean> {
+    const settings = await this.db
+      .select()
+      .from(schedulingSettings)
+      .where(eq(schedulingSettings.organizationId, organizationId))
+      .limit(1);
+    if (settings[0]?.allowClaimingDuringDraft !== false) return false;
+
+    const activeDrafts = await this.db
+      .select({ id: scheduleDrafts.id })
+      .from(scheduleDrafts)
+      .where(
+        and(eq(scheduleDrafts.organizationId, organizationId), eq(scheduleDrafts.status, 'draft')),
+      )
+      .limit(1);
+    return activeDrafts.length > 0;
+  }
+
   async claimShift(id: string, userId: string): Promise<Shift> {
     const result = await this.db
       .update(shifts)
@@ -198,7 +219,7 @@ export class ShiftsRepository {
       .onConflictDoUpdate({
         target: [employeeAvailability.userId, employeeAvailability.dayOfWeek],
         set: {
-          isAvailable: data.isAvailable,
+          preference: data.preference,
           timeFrom: data.timeFrom ?? null,
           timeTo: data.timeTo ?? null,
           updatedAt: new Date(),

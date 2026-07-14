@@ -2,6 +2,7 @@ import { pgTable, uuid, date, text, timestamp, time, boolean } from 'drizzle-orm
 import { organizations } from './organizations.schema';
 import { users } from './users.schema';
 import { recurringShifts } from './recurring-shifts.schema';
+import { staffingTemplates } from './staffing-templates.schema';
 
 export const shifts = pgTable('shifts', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -15,6 +16,9 @@ export const shifts = pgTable('shifts', {
   isOpen: boolean('is_open').notNull().default(false),
   notes: text('notes'),
   recurringShiftId: uuid('recurring_shift_id').references(() => recurringShifts.id, {
+    onDelete: 'set null',
+  }),
+  staffingTemplateId: uuid('staffing_template_id').references(() => staffingTemplates.id, {
     onDelete: 'set null',
   }),
   createdByUserId: uuid('created_by_user_id').references(() => users.id, {

@@ -1,0 +1,2 @@
+ALTER TABLE "employee_availability" ADD COLUMN "is_available" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+UPDATE "employee_availability" SET "is_available" = false WHERE "preference" = 'unavailable';
