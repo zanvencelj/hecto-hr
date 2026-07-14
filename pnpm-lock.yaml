@@ -282,6 +282,12 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.106.2)
 
+  apps/admin:
+    dependencies:
+      '@fontsource-variable/space-grotesk':
+        specifier: ^5.2.10
+        version: 5.2.10
+
   apps/backend:
     dependencies:
       '@aws-sdk/client-s3':
@@ -634,6 +640,8 @@ importers:
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
+
+  libs/backend/admin: {}
 
   libs/backend/auth: {}
 
@@ -16271,9 +16279,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89': {}
 

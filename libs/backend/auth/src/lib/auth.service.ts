@@ -37,9 +37,7 @@ import { SessionsRepository } from './sessions.repository';
 import { EmailVerificationRepository } from './email-verification.repository';
 import { OrganizationsRepository } from './organizations.repository';
 import { PasswordResetsRepository } from './password-resets.repository';
-
-const ACCESS_TOKEN_COOKIE = 'access_token';
-const REFRESH_TOKEN_COOKIE = 'refresh_token';
+import { accessTokenCookieName, refreshTokenCookieName, type AuthScope } from './cookie-names';
 
 const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 30 * 1000;
@@ -77,10 +75,17 @@ export class AuthService {
     this.otpSecret = configService.getOrThrow('EMAIL_VERIFICATION_SECRET');
   }
 
-  async login(dto: LoginDto, req: Request, res: Response): Promise<LoginResponse> {
+  async login(dto: LoginDto, req: Request, res: Response, scope: AuthScope = 'user'): Promise<LoginResponse> {
     const user = await this.usersService.validateCredentials(dto.email, dto.password);
     if (!user) throw new UnauthorizedException('Invalid email or password');
     if (!user.isActive) throw new ForbiddenException('Account is disabled');
+
+    if (user.organizationId) {
+      const org = await this.organizationsRepository.findById(user.organizationId);
+      if (!org || org.deletedAt || !org.isActive) {
+        throw new ForbiddenException('Organization is disabled');
+      }
+    }
 
     const expiresAt = new Date(Date.now() + this.refreshExpiryMs);
     const session = await this.sessionsRepository.create({
@@ -101,7 +106,7 @@ export class AuthService {
       session.id,
     );
 
-    this.setAuthCookies(res, accessToken, refreshToken);
+    this.setAuthCookies(res, accessToken, refreshToken, scope);
     await this.usersService.updateLastLogin(user.id);
 
     return {
@@ -229,7 +234,7 @@ export class AuthService {
       session.id,
     );
 
-    this.setAuthCookies(res, accessToken, refreshToken);
+    this.setAuthCookies(res, accessToken, refreshToken, 'user');
 
     await this.emailVerificationRepository.delete(verification.id);
 
@@ -302,10 +307,15 @@ export class AuthService {
     };
   }
 
-  async refresh(req: Request, res: Response, bodyToken?: string): Promise<RefreshResponse> {
+  async refresh(
+    req: Request,
+    res: Response,
+    bodyToken?: string,
+    scope: AuthScope = 'user',
+  ): Promise<RefreshResponse> {
     const token =
       bodyToken ??
-      (req.cookies as Record<string, string> | undefined)?.[REFRESH_TOKEN_COOKIE];
+      (req.cookies as Record<string, string> | undefined)?.[refreshTokenCookieName(scope)];
 
     if (!token) throw new UnauthorizedException('No refresh token provided');
 
@@ -340,13 +350,13 @@ export class AuthService {
       session.id,
     );
 
-    this.setAccessCookie(res, accessToken);
+    this.setAccessCookie(res, accessToken, scope);
     return { accessToken };
   }
 
-  async logout(req: Request, res: Response, bodyToken?: string): Promise<void> {
+  async logout(req: Request, res: Response, bodyToken?: string, scope: AuthScope = 'user'): Promise<void> {
     const token =
-      bodyToken ?? (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
+      bodyToken ?? (req.cookies as Record<string, string>)?.[refreshTokenCookieName(scope)];
     if (token) {
       try {
         const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(token, {
@@ -357,12 +367,12 @@ export class AuthService {
         // Expired or invalid refresh token — session cleared best-effort
       }
     }
-    this.clearAuthCookies(res);
+    this.clearAuthCookies(res, scope);
   }
 
-  async logoutAll(req: Request, res: Response, bodyToken?: string): Promise<void> {
+  async logoutAll(req: Request, res: Response, bodyToken?: string, scope: AuthScope = 'user'): Promise<void> {
     const token =
-      bodyToken ?? (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
+      bodyToken ?? (req.cookies as Record<string, string>)?.[refreshTokenCookieName(scope)];
     if (token) {
       try {
         const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(token, {
@@ -373,7 +383,7 @@ export class AuthService {
         // Expired or invalid refresh token — session cleared best-effort
       }
     }
-    this.clearAuthCookies(res);
+    this.clearAuthCookies(res, scope);
   }
 
   async revokeSession(sessionId: string): Promise<void> {
@@ -382,7 +392,7 @@ export class AuthService {
 
   async logoutSession(sessionId: string, res: Response): Promise<void> {
     await this.sessionsRepository.deactivate(sessionId);
-    this.clearAuthCookies(res);
+    this.clearAuthCookies(res, 'user');
   }
 
   async getSessions(userId: string, currentSessionId: string): Promise<SessionInfo[]> {
@@ -486,19 +496,24 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
-    this.setAccessCookie(res, accessToken);
-    res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
+    scope: AuthScope,
+  ): void {
+    this.setAccessCookie(res, accessToken, scope);
+    res.cookie(refreshTokenCookieName(scope), refreshToken, {
       httpOnly: true,
       secure: this.isProd,
       sameSite: 'lax',
       maxAge: this.refreshExpiryMs,
-      path: '/api/auth',
+      path: scope === 'admin' ? '/api/admin/auth' : '/api/auth',
     });
   }
 
-  private setAccessCookie(res: Response, accessToken: string): void {
-    res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
+  private setAccessCookie(res: Response, accessToken: string, scope: AuthScope): void {
+    res.cookie(accessTokenCookieName(scope), accessToken, {
       httpOnly: true,
       secure: this.isProd,
       sameSite: 'lax',
@@ -507,9 +522,11 @@ export class AuthService {
     });
   }
 
-  private clearAuthCookies(res: Response): void {
-    res.clearCookie(ACCESS_TOKEN_COOKIE, { path: '/' });
-    res.clearCookie(REFRESH_TOKEN_COOKIE, { path: '/api/auth/refresh' });
+  private clearAuthCookies(res: Response, scope: AuthScope): void {
+    res.clearCookie(accessTokenCookieName(scope), { path: '/' });
+    res.clearCookie(refreshTokenCookieName(scope), {
+      path: scope === 'admin' ? '/api/admin/auth/refresh' : '/api/auth/refresh',
+    });
   }
 }
 

@@ -5,6 +5,7 @@ export const userRoleEnum = pgEnum('user_role', [
   'hr',
   'manager',
   'employee',
+  'superadmin',
 ]);
 
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
@@ -14,6 +15,7 @@ export const organizations = pgTable('organizations', {
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
   isActive: boolean('is_active').default(true).notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

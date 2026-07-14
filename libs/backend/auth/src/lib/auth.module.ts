@@ -24,6 +24,6 @@ import { PasswordResetsRepository } from './password-resets.repository';
   ],
   controllers: [AuthController],
   providers: [AuthService, SessionsRepository, EmailVerificationRepository, OrganizationsRepository, PasswordResetsRepository, JwtAuthGuard, RolesGuard],
-  exports: [JwtAuthGuard, RolesGuard, JwtModule],
+  exports: [AuthService, JwtAuthGuard, RolesGuard, JwtModule],
 })
 export class AuthModule {}

@@ -22,6 +22,9 @@
   ],
   "references": [
     {
+      "path": "../../libs/backend/admin/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/backend/visits/tsconfig.lib.json"
     },
     {
@@ -46,13 +49,13 @@
       "path": "../../libs/shared/types/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/backend/reports/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/backend/queue/tsconfig.lib.json"
     },
     {
       "path": "../../libs/backend/mail/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/backend/reports/tsconfig.lib.json"
     },
     {
       "path": "../../libs/backend/database/tsconfig.lib.json"

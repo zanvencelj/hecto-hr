@@ -6,6 +6,7 @@ import { DATABASE_CONNECTION, type Database, type LeaveType, users, organization
 const SEED_PASSWORD = 'hecto123';
 const DEV_ORG_NAME = 'Hecto Dev';
 const DEV_ORG_SLUG = 'hecto-dev';
+const DEV_SUPERADMIN_EMAIL = 'superadmin@hecto.dev';
 
 const SEED_USERS = [
   {
@@ -56,7 +57,40 @@ export class SeedService {
     const orgId = await this.seedOrganization();
     await this.seedUsers(orgId);
     await this.seedLeaveTypes(orgId);
+    await this.seedSuperadmin();
     this.logger.log('Seed completed.');
+  }
+
+  private async seedSuperadmin(): Promise<void> {
+    const existing = await this.db
+      .select({ id: users.id, role: users.role })
+      .from(users)
+      .where(eq(users.email, DEV_SUPERADMIN_EMAIL))
+      .limit(1);
+
+    if (existing[0]) {
+      this.logger.log(`Skipped superadmin (already exists): ${DEV_SUPERADMIN_EMAIL}`);
+      return;
+    }
+
+    const passwordHash = await argon2.hash(SEED_PASSWORD, {
+      type: argon2.argon2id,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 4,
+    });
+
+    await this.db.insert(users).values({
+      email: DEV_SUPERADMIN_EMAIL,
+      passwordHash,
+      role: 'superadmin',
+      organizationId: null,
+      firstName: 'Super',
+      lastName: 'Admin',
+      isActive: true,
+    });
+
+    this.logger.log(`Created superadmin: ${DEV_SUPERADMIN_EMAIL}`);
   }
 
   private async seedOrganization(): Promise<string> {

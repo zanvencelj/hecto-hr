@@ -59,6 +59,12 @@
     },
     {
       "path": "./libs/backend/visits"
+    },
+    {
+      "path": "./libs/backend/admin"
+    },
+    {
+      "path": "./apps/admin"
     }
   ]
 }
