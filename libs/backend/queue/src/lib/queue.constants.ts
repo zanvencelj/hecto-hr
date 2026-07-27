@@ -5,6 +5,7 @@ export const JOB_NAMES = {
   SEND_VERIFICATION_EMAIL: 'send-verification-email',
   SEND_PASSWORD_RESET_EMAIL: 'send-password-reset-email',
   SEND_INVITATION_EMAIL: 'send-invitation-email',
+  SEND_SCHEDULE_PUBLISHED: 'send-schedule-published',
 } as const;
 
 export type SendWelcomeEmailData = {
@@ -30,4 +31,13 @@ export type SendInvitationEmailData = {
   inviteLink: string;
   organizationName: string;
   inviterName: string | null;
+};
+
+export type SendSchedulePublishedData = {
+  email: string;
+  firstName: string | null;
+  pushTokens: string[];
+  shiftCount: number;
+  dateFrom: string;
+  dateTo: string;
 };

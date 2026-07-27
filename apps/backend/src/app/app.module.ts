@@ -13,6 +13,7 @@ import { StorageModule } from '@hecto/storage';
 import { EmployeesModule } from '@hecto/employees';
 import { ShiftsModule } from '@hecto/shifts';
 import { LeaveModule } from '@hecto/leave';
+import { SchedulingModule } from '@hecto/scheduling';
 import { EventsModule } from '@hecto/events';
 import { ReportsModule } from '@hecto/reports';
 import { VisitsModule } from '@hecto/visits';
@@ -45,6 +46,7 @@ import { validateEnv } from '../env.validation';
     EmployeesModule,
     ShiftsModule,
     LeaveModule,
+    SchedulingModule,
     EventsModule,
     ReportsModule,
     VisitsModule,

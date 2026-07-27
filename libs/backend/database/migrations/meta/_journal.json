@@ -78,6 +78,20 @@
       "when": 1783864901993,
       "tag": "0012_sparkling_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1784062940739,
+      "tag": "0013_auto_schedule_builder",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784062962880,
+      "tag": "0014_drop_is_available",
+      "breakpoints": true
     }
   ]
 }

@@ -666,6 +666,8 @@ importers:
 
   libs/backend/reports: {}
 
+  libs/backend/scheduling: {}
+
   libs/backend/shifts: {}
 
   libs/backend/storage: {}

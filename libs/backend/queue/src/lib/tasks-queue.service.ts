@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
-import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData, type SendPasswordResetEmailData, type SendInvitationEmailData } from './queue.constants';
+import { TASKS_QUEUE, JOB_NAMES, type SendWelcomeEmailData, type SendVerificationEmailData, type SendPasswordResetEmailData, type SendInvitationEmailData, type SendSchedulePublishedData } from './queue.constants';
 
 @Injectable()
 export class TasksQueueService {
@@ -46,5 +46,13 @@ export class TasksQueueService {
       backoff: { type: 'exponential', delay: 2000 },
     });
     this.logger.log(`Enqueued invitation email → ${email}`);
+  }
+
+  async sendSchedulePublished(data: SendSchedulePublishedData): Promise<void> {
+    await this.queue.add(JOB_NAMES.SEND_SCHEDULE_PUBLISHED, data, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+    });
+    this.logger.log(`Enqueued schedule published notification → ${data.email}`);
   }
 }

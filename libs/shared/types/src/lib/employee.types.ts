@@ -14,6 +14,7 @@ export interface EmployeePublic {
   department: string | null;
   phone: string | null;
   hireDate: string | null;
+  maxHoursPerWeek: number | null;
   notes: string | null;
   emergencyContact: {
     name: string;

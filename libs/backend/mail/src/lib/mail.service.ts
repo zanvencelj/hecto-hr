@@ -6,6 +6,7 @@ import { welcomeEmailHtml } from './templates/welcome.template';
 import { verificationCodeEmailHtml } from './templates/verification-code.template';
 import { passwordResetEmailHtml } from './templates/password-reset.template';
 import { invitationEmailHtml } from './templates/invitation.template';
+import { schedulePublishedEmailHtml } from './templates/schedule-published.template';
 
 @Injectable()
 export class MailService {
@@ -72,5 +73,21 @@ export class MailService {
       html: invitationEmailHtml(inviteLink, firstName, organizationName, inviterName),
     });
     this.logger.log(`Invitation email sent → ${email}`);
+  }
+
+  async sendSchedulePublishedEmail(
+    email: string,
+    firstName: string | null,
+    shiftCount: number,
+    dateFrom: string,
+    dateTo: string,
+  ): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.from,
+      to: email,
+      subject: 'Your new schedule is ready',
+      html: schedulePublishedEmailHtml(firstName, shiftCount, dateFrom, dateTo),
+    });
+    this.logger.log(`Schedule published email sent → ${email}`);
   }
 }

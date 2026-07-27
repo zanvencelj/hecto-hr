@@ -1,4 +1,4 @@
-import type { ShiftPublic } from '@hecto/shared-types';
+import type { AvailabilityPreference, ShiftPublic } from '@hecto/shared-types';
 import { api } from '@/lib/api';
 
 export interface AvailabilityEntry {
@@ -6,14 +6,14 @@ export interface AvailabilityEntry {
   userId: string;
   organizationId: string;
   dayOfWeek: number;
-  isAvailable: boolean;
+  preference: AvailabilityPreference;
   timeFrom: string | null;
   timeTo: string | null;
 }
 
 export interface SetAvailabilityPayload {
   dayOfWeek: number;
-  isAvailable: boolean;
+  preference: AvailabilityPreference;
   timeFrom?: string;
   timeTo?: string;
 }

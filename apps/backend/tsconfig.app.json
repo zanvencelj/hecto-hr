@@ -31,6 +31,9 @@
       "path": "../../libs/backend/events/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/backend/scheduling/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/backend/leave/tsconfig.lib.json"
     },
     {

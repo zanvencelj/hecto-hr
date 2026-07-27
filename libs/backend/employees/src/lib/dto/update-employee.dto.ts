@@ -1,4 +1,4 @@
-import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateIf } from 'class-validator';
 import type { UserRole } from '@hecto/shared-types';
 
 export class UpdateEmployeeDto {
@@ -34,6 +34,14 @@ export class UpdateEmployeeDto {
   @IsOptional()
   @IsDateString()
   hireDate?: string;
+
+  /** Weekly hours cap for auto-scheduling; null clears the override. */
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsInt()
+  @Min(1)
+  @Max(168)
+  maxHoursPerWeek?: number | null;
 
   @IsOptional()
   @IsBoolean()

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailModule } from '@hecto/mail';
 import { TASKS_QUEUE } from './queue.constants';
 import { TasksQueueService } from './tasks-queue.service';
+import { PushService } from './push.service';
 
 @Global()
 @Module({
@@ -31,7 +32,7 @@ import { TasksQueueService } from './tasks-queue.service';
     BullModule.registerQueue({ name: TASKS_QUEUE }),
     MailModule,
   ],
-  providers: [TasksQueueService],
-  exports: [TasksQueueService, MailModule],
+  providers: [TasksQueueService, PushService],
+  exports: [TasksQueueService, PushService, MailModule],
 })
 export class QueueModule {}

@@ -10,6 +10,7 @@ import { sessionsRoute } from './routes/sessions.route';
 import { employeesListRoute } from './routes/employees/list.route';
 import { employeeDetailRoute } from './routes/employees/detail.route';
 import { scheduleManagerRoute } from './routes/schedule/manager.route';
+import { autoScheduleRoute } from './routes/schedule/auto-schedule.route';
 import { scheduleEmployeeRoute } from './routes/schedule/employee.route';
 import { leaveManagerRoute } from './routes/leave/manager.route';
 import { leaveEmployeeRoute } from './routes/leave/employee.route';
@@ -25,6 +26,7 @@ const routeTree = rootRoute.addChildren([
   employeesListRoute,
   employeeDetailRoute,
   scheduleManagerRoute,
+  autoScheduleRoute,
   scheduleEmployeeRoute,
   leaveManagerRoute,
   leaveEmployeeRoute,
