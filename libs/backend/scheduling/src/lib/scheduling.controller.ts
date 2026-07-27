@@ -9,8 +9,10 @@ import {
   Patch,
   Post,
   Put,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import type {
   AccessTokenPayload,
   PublishResultPublic,
@@ -91,8 +93,12 @@ export class SchedulingController {
 
   @Get('draft')
   @Roles('admin', 'hr', 'manager')
-  getActiveDraft(@CurrentUser() user: AccessTokenPayload): Promise<ScheduleDraftPublic | null> {
-    return this.schedulingService.getActiveDraft(user);
+  async getActiveDraft(
+    @CurrentUser() user: AccessTokenPayload,
+    @Res() res: Response,
+  ): Promise<void> {
+    const draft = await this.schedulingService.getActiveDraft(user);
+    res.json(draft);
   }
 
   @Post('drafts')

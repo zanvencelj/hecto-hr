@@ -21,6 +21,7 @@ COPY libs/backend/events/package.json libs/backend/events/package.json
 COPY libs/backend/reports/package.json libs/backend/reports/package.json
 COPY libs/backend/visits/package.json libs/backend/visits/package.json
 COPY libs/backend/admin/package.json libs/backend/admin/package.json
+COPY libs/backend/scheduling/package.json libs/backend/scheduling/package.json
 COPY libs/shared/types/package.json libs/shared/types/package.json
 COPY patches/ patches/
 RUN pnpm install --frozen-lockfile
