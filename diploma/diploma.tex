@@ -1,0 +1,92 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% datoteka diploma.tex
+%
+% Diplomsko delo: Razvoj aplikacije za upravljanje delovnega časa in kadrovskih procesov
+% Osnovano na diploma-predloga.tex (UL FRI)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DocumentMetadata{pdfstandard = a-2b, pdfversion = 1.7, lang = sl-SI}
+
+\documentclass[a4paper,12pt,openright]{book}
+%\documentclass[a4paper, 12pt, openright, draft]{book}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  PODATKI O DIPLOMI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\tauthor}{Žan Vencelj}
+\newcommand{\temail}{zan.vencelj@gmail.com}
+\newcommand{\tmentor}{doc. dr. Aleš Smrdel }
+
+\newcommand{\tstopnja}%
+{VISOKOŠOLSKI STROKOVNI ŠTUDIJSKI PROGRAM\\ PRVE STOPNJE}
+
+\newcommand{\tinst}%
+{Fakulteta za računalništvo in informatiko}
+
+\newcommand{\tvrsta}{Diplomsko delo visokošolskega strokovnega študijskega programa prve stopnje Računalništvo in informatika}
+
+% TODO: prepiši dobesedno iz študijskega informacijskega sistema (STUDIS)
+\newcommand{\tdescription}
+{Pomemben dejavnik uspešnega poslovanja podjetij je učinkovito upravljanje s človeškimi viri, kar velja tako za velika kot tudi za srednja in mala podjetja. Na trgu je na voljo vrsta komercialnih rešitev za podporo procesom upravljanja s človeškimi viri, vendar so te pogosto prilagojene predvsem potrebam večjih organizacij. Namen diplomskega dela je zato razviti rešitev za upravljanje s človeškimi viri, ki bo prilagojena potrebam in značilnostim manjših podjetij. V okviru dela najprej preučite obstoječe rešitve na trgu ter na podlagi analize opredelite ključne funkcionalne in nefunkcionalne zahteve sistema. Nato načrtujte podatkovni model in arhitekturo aplikacije ter na podlagi ugotovljenih zahtev izberite ustrezne tehnologije za njeno izvedbo. Z izbranimi tehnologijami nato implementirajte opredeljene funkcionalnosti. Razviti sistem ustrezno testirajte ter predstavite in ovrednotite rezultate testiranja.}
+\newcommand{\tdescriptionEn}
+{An important factor in successful business operations is effective human resource management, which applies to large as well as small and medium-sized enterprises. Although a wide range of commercial solutions is available on the market to support human resource management processes, these are often tailored primarily to the needs of larger organizations. The aim of this thesis is therefore to develop a human resource management solution tailored to the specific needs and characteristics of smaller companies. Within the scope of the thesis, first examine existing market solutions and, based on this analysis, define the key functional and non-functional requirements for the system. Next, design the data model and application architecture, and select the appropriate technologies for implementation based on the identified requirements. Using the chosen technologies, implement the defined functionalities. Finally, test the developed system thoroughly, and present and evaluate the test results.}
+
+\newcommand{\ttitle}{Razvoj aplikacije za upravljanje delovnega časa in kadrovskih procesov}
+\newcommand{\ttitleEn}{Development of an Application for Work Time and Human Resources Management}
+
+\newcommand{\tkeywords}{upravljanje delovnega časa, kadrovski procesi, razporejanje izmen, dostop na osnovi vlog, spletna aplikacija, mobilna aplikacija}
+\newcommand{\tkeywordsEn}{work time management, human resources, shift scheduling, role-based access control, web application, mobile application}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  VKLJUČITEV NUJNIH ELEMENTOV 1/2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{podporno/preambula.tex}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\usepackage{placeins}
+\usepackage{booktabs}
+\setlength{\headheight}{15.05pt}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% POVZETEK
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\tpovzetek}
+{V diplomskem delu je predstavljena zasnova in razvoj spletne ter mobilne aplikacije za upravljanje delovnega časa in kadrovskih procesov. Sistem združuje evidenco delovnega časa, razporejanje izmen in upravljanje odsotnosti v enotni platformi, dostopni prek spletnega in mobilnega vmesnika. Platforma ločuje pravice dostopa glede na vlogo uporabnika: administrator in kadrovska služba upravljata zaposlene, odsotnosti, urnike ter nastavitve podjetja, vodja odobrava odsotnosti in razporeja izmene svoje ekipe, zaposleni pa ima dostop do lastnega urnika, evidence delovnega časa in oddaje zahtevkov za odsotnost. Predstavljeni so zajete zahteve, podatkovni model, arhitektura sistema, uporabljene tehnologije in delovanje posameznih modulov. Poseben poudarek je namenjen modulu za samodejno generiranje osnutka urnika, ki pri razporejanju izmen upošteva razpoložljivost, preference in delovnopravne omejitve zaposlenih. Na koncu so predstavljeni še rezultati testiranja razvitega sistema: testiranje z 12 testnimi uporabniki po standardiziranem vprašalniku System Usability Scale (SUS) je pokazalo povprečno oceno 88,1 od 100, kar sistem uvršča v razred uporabnosti ``odlično''. Rezultati potrjujejo, da uporabniki razvito rešitev ocenjujejo kot uporabno in enostavno za uporabo.}
+
+\newcommand{\tabstract}
+{This thesis presents the design and development of a web and mobile application for work time and human resources management. The system combines time tracking, shift scheduling and leave management within a single platform, accessible through web and mobile interfaces. The platform separates access rights by user role: the administrator and human resources staff manage employees, leave, schedules and company settings, the manager approves leave requests and schedules shifts for their team, and the employee has self-service access to their own schedule, time records and leave requests. We describe the gathered requirements, data model, system architecture and technologies used, and present the operation of the individual modules. Particular emphasis is placed on the module for automatic draft schedule generation, which takes employee availability, preferences and labour-law constraints into account when scheduling shifts. Finally, we present the results of testing the developed system: testing with 12 test users using the standardized System Usability Scale (SUS) questionnaire yielded an average score of 88.1 out of 100, placing the system in the ``excellent'' usability category. The results confirm that users rate the developed solution as useful and easy to use, while the time saved through automatic shift scheduling is only indirectly supported, as it was not measured directly.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  VKLJUČITEV NUJNIH ELEMENTOV 2/2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{podporno/naslovnestrani.tex}
+\mainmatter
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GLAVNA VSEBINA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{poglavja/uvod.tex}
+\input{poglavja/sorodna-dela.tex}
+\input{poglavja/nacrtovanje.tex}
+\input{poglavja/tehnologije.tex}
+\input{poglavja/predstavitev-sistema.tex}
+\input{poglavja/evalvacija.tex}
+\input{poglavja/zakljucek.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LITERATURA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\printbibliography[heading=bibintoc]
+
+\end{document}

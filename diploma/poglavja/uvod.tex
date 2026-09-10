@@ -1,0 +1,41 @@
+\chapter{Uvod}
+\label{ch:uvod}
+
+Upravljanje delovnega časa in kadrovskih procesov je za vsako organizacijo, ne glede na njeno velikost, ena od temeljnih administrativnih nalog. Podjetja morajo dosledno beležiti prihode in odhode zaposlenih, razporejati izmene, upravljati odsotnosti in nadomestila ter ob tem zagotavljati, da imajo posamezni sodelavci dostop le do podatkov in funkcij, ki ustrezajo njihovi vlogi. V manjših in srednje velikih podjetjih se te naloge pogosto še vedno opravljajo z razpršenim naborom orodij, na primer s preglednicami, papirnimi obrazci in ločenimi spletnimi storitvami za posamezne procese. Taka razdrobljenost povečuje možnost napak, otežuje pregled nad stanjem in zahteva veliko ročnega usklajevanja podatkov med sistemi.
+
+Na trgu sicer obstajajo celovite platforme za upravljanje človeških virov (angl. Human Resources, HR), vendar so pogosto zasnovane za velika podjetja, cenovno manj dostopne za manjše organizacije ali pa premalo prilagodljive procesom, ki jih posamezna organizacija dejansko uporablja. Podroben pregled nekaterih obstoječih rešitev in znanstvenih del s področja razporejanja izmen podajamo v poglavju~\ref{ch:sorodna}.
+
+Motivacija za to diplomsko delo izhaja iz potrebe po razvoju enotne spletne in mobilne aplikacije, ki v enem sistemu združuje evidenco delovnega časa, razporejanje izmen in upravljanje odsotnosti, ob tem pa podpira dostop na osnovi vlog za administratorja, kadrovsko službo, vodjo in zaposlenega. Poseben poudarek namenjamo samodejnemu predlaganju urnika, saj je ročno razporejanje izmen ob upoštevanju razpoložljivosti, preferenc in delovnopravnih omejitev zaposlenih dolgotrajno in podvrženo napakam.
+
+\section{Cilji naloge}
+\label{sec:cilji}
+
+Cilji diplomskega dela so:
+
+\begin{enumerate}
+    \item zasnovati in razviti spletno aplikacijo za vodje in kadrovsko službo ter mobilno aplikacijo za zaposlene, ki skupaj pokrivata celoten cikel upravljanja delovnega časa in kadrovskih procesov,
+    \item zasnovati dostop na osnovi vlog (angl. role-based access, RBAC), ki loči pristojnosti administratorja, kadrovske službe, vodje in zaposlenega,
+    \item omogočiti evidenco delovnega časa prek beleženja dogodkov, kot so prihod, odhod, odmor, delo od doma in službena pot, vključno z delovnim tokom za popravke že vnesenih dogodkov,
+    \item razviti modul za razporejanje izmen, ki poleg ročnega urejanja urnika podpira tudi samodejno generiranje osnutka urnika glede na razpoložljivost in preference zaposlenih,
+    \item razviti modul za upravljanje odsotnosti, ki zajema nastavljive tipe odsotnosti, evidenco stanja odsotnosti po zaposlenemu in delovni tok odobravanja,
+    \item razviti nadzorni vmesnik za upravljanje več organizacij na eni platformi,
+    \item ovrednotiti uporabnost razvite rešitve s pomočjo testnih uporabnikov in standardiziranega vprašalnika o uporabniški izkušnji.
+\end{enumerate}
+
+Poleg naštetih ciljev smo se, ker souporablja isto infrastrukturo za avtentikacijo naprav in upravljanje organizacij, odločili razviti tudi dodaten kiosk modul za evidenco obiskov na recepciji organizacije. Ta modul ni bil del prvotnega obsega niti ni podlaga za hipoteze v razdelku~\ref{sec:hipoteze}, zato ga v nadaljevanju obravnavamo ločeno od osrednjih kadrovskih procesov.
+
+\section{Hipoteze}
+\label{sec:hipoteze}
+
+V nalogi preverjamo naslednje hipoteze:
+
+\begin{description}
+    \item[H1] Enoten sistem, ki združuje evidenco delovnega časa, razporejanje izmen in upravljanje odsotnosti, zmanjša potrebo po ročnem usklajevanju podatkov med ločenimi orodji.
+    \item[H2] Samodejno generiranje osnutka urnika na podlagi razpoložljivosti, odsotnosti in delovnopravnih omejitev zaposlenim in vodjem prihrani čas v primerjavi z ročnim razporejanjem.
+    \item[H3] Uporabniki bodo uporabnost razvite aplikacije ocenili kot dobro, kar bo razvidno iz povprečnega rezultata vprašalnika System Usability Scale (SUS), višjega od 71 točk~\cite{bangor2009determining,hertzum2026meta}.
+\end{description}
+
+\section{Struktura diplome}
+\label{sec:pregled-vsebine}
+
+V nadaljevanju poglavje~\ref{ch:sorodna} umesti razvito rešitev v obstoječi kontekst in predstavi sorodne komercialne in raziskovalne rešitve. Poglavje~\ref{ch:nacrtovanje} opiše zajete zahteve, podatkovni model in arhitekturo sistema. Poglavje~\ref{ch:tehnologije} na kratko predstavi uporabljene tehnologije in razloge za njihovo izbiro. Poglavje~\ref{ch:sistem} podrobno predstavi delovanje sistema po posameznih modulih. Poglavje~\ref{ch:evalvacija} opiše evalvacijo s testnimi uporabniki in dobljene rezultate. Poglavje~\ref{ch:zakljucek} pa povzame dosežene cilje, kritično presodi opravljeno delo in nakaže smeri za nadaljnji razvoj.
