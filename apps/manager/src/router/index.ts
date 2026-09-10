@@ -18,6 +18,7 @@ import { changeRequestsRoute } from './routes/change-requests.route';
 import { myHistoryRoute } from './routes/my-history.route';
 import { visitorsRoute } from './routes/visitors.route';
 import { kioskDevicesRoute } from './routes/kiosk-devices.route';
+import { companySettingsRoute } from './routes/company-settings.route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -34,6 +35,7 @@ const routeTree = rootRoute.addChildren([
   myHistoryRoute,
   visitorsRoute,
   kioskDevicesRoute,
+  companySettingsRoute,
   authLayoutRoute.addChildren([loginRoute, registerRoute]),
 ]);
 

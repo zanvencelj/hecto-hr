@@ -21,6 +21,9 @@ function useNavItems(): NavItem[] {
       { to: '/change-requests', label: 'Change Requests' },
       { to: '/visitors', label: 'Visitors' },
       ...(role === 'admin' ? [{ to: '/kiosk-devices', label: 'Kiosk Devices' }] : []),
+      ...(role === 'admin' || role === 'hr'
+        ? [{ to: '/company-settings', label: 'Company Settings' }]
+        : []),
     ];
   }
   return [

@@ -22,6 +22,8 @@ pnpm seed              # seed demo users + leave types
 
 pnpm dev:backend       # backend (hot-reload)
 pnpm dev:manager       # manager frontend at http://localhost:4200
+pnpm dev:admin         # admin frontend at http://localhost:4300
+pnpm dev:landing       # landing page at http://localhost:4400
 pnpm mobile            # employee mobile app (Expo)
 ```
 

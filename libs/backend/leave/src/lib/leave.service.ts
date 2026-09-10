@@ -10,6 +10,7 @@ import type {
   LeaveBalancePublic,
   LeaveRequestPublic,
 } from '@hecto/shared-types';
+import { CompanySettingsService } from '@hecto/company-settings';
 import { LeaveRepository } from './leave.repository';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 import { ReviewLeaveRequestDto } from './dto/review-leave-request.dto';
@@ -18,13 +19,17 @@ import type { LeaveRequest, LeaveType } from '@hecto/database';
 
 const MANAGER_ROLES = ['admin', 'hr', 'manager'];
 
-export function countWeekdays(startDate: string, endDate: string): number {
+export function countWeekdays(
+  startDate: string,
+  endDate: string,
+  weekendDays: number[] = [0, 6],
+): number {
   let count = 0;
   const current = new Date(startDate);
   const end = new Date(endDate);
   while (current <= end) {
     const day = current.getDay();
-    if (day !== 0 && day !== 6) count++;
+    if (!weekendDays.includes(day)) count++;
     current.setDate(current.getDate() + 1);
   }
   return count;
@@ -32,7 +37,10 @@ export function countWeekdays(startDate: string, endDate: string): number {
 
 @Injectable()
 export class LeaveService {
-  constructor(private readonly leaveRepo: LeaveRepository) {}
+  constructor(
+    private readonly leaveRepo: LeaveRepository,
+    private readonly companySettingsService: CompanySettingsService,
+  ) {}
 
   async getLeaveTypes(organizationId: string): Promise<LeaveTypePublic[]> {
     const types = await this.leaveRepo.findLeaveTypesByOrg(organizationId);
@@ -115,7 +123,8 @@ export class LeaveService {
       throw new ForbiddenException('Employees can only request leave for themselves');
     }
 
-    const totalDays = countWeekdays(dto.startDate, dto.endDate);
+    const companySettings = await this.companySettingsService.getSettings(currentUser);
+    const totalDays = countWeekdays(dto.startDate, dto.endDate, companySettings.weekendDays);
     if (totalDays <= 0) throw new BadRequestException('Invalid date range');
 
     const isManualEntry = isManager && (dto.isManualEntry ?? false);

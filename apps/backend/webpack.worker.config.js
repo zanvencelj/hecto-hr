@@ -21,6 +21,7 @@ module.exports = {
       '@hecto/employees': join(root, 'libs/backend/employees/src/index.ts'),
       '@hecto/shifts': join(root, 'libs/backend/shifts/src/index.ts'),
       '@hecto/leave': join(root, 'libs/backend/leave/src/index.ts'),
+      '@hecto/company-settings': join(root, 'libs/backend/company-settings/src/index.ts'),
     },
   },
   output: {

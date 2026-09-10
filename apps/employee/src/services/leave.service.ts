@@ -2,6 +2,7 @@ import type { LeaveTypePublic, LeaveBalancePublic, LeaveRequestPublic } from '@h
 import { api } from '@/lib/api';
 
 export interface CreateLeaveRequestPayload {
+  userId: string;
   leaveTypeId: string;
   startDate: string;
   endDate: string;

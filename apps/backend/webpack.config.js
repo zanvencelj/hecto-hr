@@ -18,6 +18,10 @@ module.exports = {
       '@hecto/leave': join(root, 'libs/backend/leave/src/index.ts'),
       '@hecto/events': join(root, 'libs/backend/events/src/index.ts'),
       '@hecto/reports': join(root, 'libs/backend/reports/src/index.ts'),
+      '@hecto/scheduling': join(root, 'libs/backend/scheduling/src/index.ts'),
+      '@hecto/visits': join(root, 'libs/backend/visits/src/index.ts'),
+      '@hecto/admin': join(root, 'libs/backend/admin/src/index.ts'),
+      '@hecto/company-settings': join(root, 'libs/backend/company-settings/src/index.ts'),
     },
   },
   output: {

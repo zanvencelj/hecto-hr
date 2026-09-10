@@ -21,4 +21,6 @@ export * from './push-tokens.schema';
 export * from './kiosk-devices.schema';
 export * from './visits.schema';
 export * from './admin-audit-logs.schema';
+export * from './app-links.schema';
+export * from './company-settings.schema';
 export * from './database.helpers';

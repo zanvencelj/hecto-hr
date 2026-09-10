@@ -73,6 +73,40 @@
           }
         }
       },
+      "build-seed": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "webpack-cli build --config webpack.seed.config.js",
+          "args": [
+            "--node-env=production"
+          ],
+          "cwd": "apps/backend"
+        },
+        "configurations": {
+          "development": {
+            "args": [
+              "--node-env=development"
+            ]
+          }
+        }
+      },
+      "build-create-superadmin": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "webpack-cli build --config webpack.create-superadmin.config.js",
+          "args": [
+            "--node-env=production"
+          ],
+          "cwd": "apps/backend"
+        },
+        "configurations": {
+          "development": {
+            "args": [
+              "--node-env=development"
+            ]
+          }
+        }
+      },
       "serve": {
         "continuous": true,
         "executor": "nx:run-commands",
@@ -126,7 +160,9 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
     "helmet": "^8.1.0",
+    "ioredis": "^5.10.1",
     "nestjs-pino": "^4.0.0",
     "nodemailer": "^8.0.7",
     "passport": "^0.7.0",
@@ -136,7 +172,8 @@
     "pino-http": "^10.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.0.0",

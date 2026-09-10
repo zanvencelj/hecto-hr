@@ -170,6 +170,23 @@ export class ShiftsRepository {
     await this.db.delete(shifts).where(and(...conditions));
   }
 
+  async findShiftsForEmployeeOnDate(
+    userId: string,
+    organizationId: string,
+    date: string,
+  ): Promise<Shift[]> {
+    return this.db
+      .select()
+      .from(shifts)
+      .where(
+        and(
+          eq(shifts.userId, userId),
+          eq(shifts.organizationId, organizationId),
+          eq(shifts.date, date),
+        ),
+      );
+  }
+
   async findOpenShifts(organizationId: string, from: string, to: string): Promise<Shift[]> {
     return this.db
       .select()

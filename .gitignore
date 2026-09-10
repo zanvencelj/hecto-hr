@@ -2,6 +2,10 @@ node_modules
 .claude
 .nx
 .vscode
+.opencode
+.agents
+.codex
+.gemini
 
 # pnpm
 .pnpmfile.cjs
@@ -11,10 +15,10 @@ dist
 out-tsc
 test-output
 
-# Environment files — copy .env.example and fill in values
 .env
 .env.local
 .env.*.local
+.env.production
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*

@@ -1,7 +1,14 @@
 FROM node:22-alpine AS base
+WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+# Pin the exact pnpm version from the root package.json (not just `corepack
+# enable`, which lets a bare `pnpm` resolve to latest) — the runner stage only
+# copies the pruned apps/backend/dist/package.json, which has no
+# packageManager field of its own, so without this it silently drifts to
+# whatever pnpm is newest and produces a lockfile the frozen install rejects.
+COPY package.json ./
+RUN corepack enable && corepack prepare "$(node -p "require('./package.json').packageManager")" --activate
 
 # ---- deps stage ----
 FROM base AS deps
@@ -30,10 +37,12 @@ COPY --from=deps /app/libs/shared/types/node_modules ./libs/shared/types/node_mo
 COPY . .
 # nx sync reconciles TypeScript project references (required in non-interactive/CI envs)
 # backend:prune builds main.js (clean: true), generates pruned lockfile + copies workspace modules
-# build-worker runs after so worker.js is added without clobbering the main bundle
+# build-worker/build-seed/build-create-superadmin run after so they're added without clobbering main.js
 RUN pnpm nx sync && \
     pnpm nx run backend:prune && \
     pnpm nx run backend:build-worker && \
+    pnpm nx run backend:build-seed && \
+    pnpm nx run backend:build-create-superadmin && \
     mkdir -p apps/backend/dist/workspace_modules apps/backend/dist/assets
 
 # ---- migrator stage (used by docker-compose.prod.yml migrate service) ----
@@ -55,15 +64,24 @@ ENV PORT=3000
 # Install only the production runtime deps from the pruned lockfile
 COPY --from=builder /app/apps/backend/dist/package.json ./package.json
 COPY --from=builder /app/apps/backend/dist/pnpm-lock.yaml ./pnpm-lock.yaml
+# @nx/js:prune-lockfile carries the root's top-level `patchedDependencies`
+# block (react-native-css-interop, for the Expo apps) into the pruned lockfile
+# even though the pruned package.json has no pnpm.patchedDependencies of its
+# own — backend depends on none of it. That mismatch fails the frozen
+# install below, so strip the now-orphaned block first.
+RUN awk '/^patchedDependencies:/{skip=1;next} skip&&/^[^[:space:]]/{skip=0} !skip' \
+      pnpm-lock.yaml > pnpm-lock.yaml.tmp && mv pnpm-lock.yaml.tmp pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     # pnpm creates symlinks for workspace:* packages; remove them so the
     # compiled workspace modules copied below can replace them cleanly
     rm -rf node_modules/@hecto
 # Overlay compiled workspace packages (replaces the symlinks removed above)
 COPY --from=builder /app/apps/backend/dist/workspace_modules ./node_modules/
-# Copy both entry points — docker-compose selects which to run per service
+# Copy all entry points — docker-compose selects which to run per service
 COPY --from=builder /app/apps/backend/dist/main.js ./main.js
 COPY --from=builder /app/apps/backend/dist/worker.js ./worker.js
+COPY --from=builder /app/apps/backend/dist/seed.js ./seed.js
+COPY --from=builder /app/apps/backend/dist/create-superadmin.js ./create-superadmin.js
 COPY --from=builder /app/apps/backend/dist/assets ./assets
 EXPOSE 3000
 CMD ["node", "main.js"]

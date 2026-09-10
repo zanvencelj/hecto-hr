@@ -15,6 +15,10 @@ import { AdminUsersRepository } from './users/admin-users.repository';
 import { AdminInvitationsController } from './invitations/admin-invitations.controller';
 import { AdminInvitationsService } from './invitations/admin-invitations.service';
 import { AdminInvitationsRepository } from './invitations/admin-invitations.repository';
+import { AdminAppLinksController } from './app-links/admin-app-links.controller';
+import { PublicAppLinksController } from './app-links/public-app-links.controller';
+import { AdminAppLinksService } from './app-links/admin-app-links.service';
+import { AdminAppLinksRepository } from './app-links/admin-app-links.repository';
 
 @Module({
   imports: [AuthModule, UsersModule],
@@ -24,6 +28,8 @@ import { AdminInvitationsRepository } from './invitations/admin-invitations.repo
     AdminUsersController,
     AdminInvitationsController,
     AdminAuditController,
+    AdminAppLinksController,
+    PublicAppLinksController,
   ],
   providers: [
     AdminAuthService,
@@ -35,6 +41,8 @@ import { AdminInvitationsRepository } from './invitations/admin-invitations.repo
     AdminUsersRepository,
     AdminInvitationsService,
     AdminInvitationsRepository,
+    AdminAppLinksService,
+    AdminAppLinksRepository,
   ],
 })
 export class AdminModule {}
