@@ -65,6 +65,9 @@
     },
     {
       "path": "../../libs/backend/auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/backend/company-settings/tsconfig.lib.json"
     }
   ],
 }

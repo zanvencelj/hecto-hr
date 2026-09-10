@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import type { AvailabilityPreference } from '@hecto/shared-types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,17 +20,20 @@ type Tab = 'schedule' | 'open' | 'availability';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function weekRange(): { from: string; to: string } {
-  const now = new Date();
-  const day = now.getDay();
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - day + 1);
+function weekRange(reference: Date): { from: string; to: string } {
+  const day = reference.getDay();
+  const mon = new Date(reference);
+  mon.setDate(reference.getDate() - day + 1);
   const sun = new Date(mon);
   sun.setDate(mon.getDate() + 6);
   return {
     from: mon.toISOString().split('T')[0]!,
     to: sun.toISOString().split('T')[0]!,
   };
+}
+
+function formatRange(from: string, to: string): string {
+  return `${formatDate(from)} – ${formatDate(to)}`;
 }
 
 function formatShiftTime(time: string): string {
@@ -50,16 +53,31 @@ function todayDateString(): string {
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
 }
 
+function shiftsOverlap(
+  a: { date: string; startTime: string; endTime: string },
+  b: { date: string; startTime: string; endTime: string },
+): boolean {
+  return a.date === b.date && a.startTime < b.endTime && b.startTime < a.endTime;
+}
+
 export default function ShiftsScreen() {
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<Tab>('schedule');
+  const [weekStart, setWeekStart] = useState(() => new Date());
   const queryClient = useQueryClient();
-  const { from, to } = weekRange();
+  const { from, to } = useMemo(() => weekRange(weekStart), [weekStart]);
+
+  function prevWeek() {
+    setWeekStart((d) => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; });
+  }
+  function nextWeek() {
+    setWeekStart((d) => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; });
+  }
 
   const myShiftsQuery = useQuery({
     queryKey: ['shifts', 'mine', from, to],
     queryFn: () => getMyShifts(user!.id, from, to),
-    enabled: !!user && tab === 'schedule',
+    enabled: !!user && (tab === 'schedule' || tab === 'open'),
   });
 
   const openShiftsQuery = useQuery({
@@ -67,6 +85,17 @@ export default function ShiftsScreen() {
     queryFn: () => getOpenShifts(from, to),
     enabled: tab === 'open',
   });
+
+  const { available: availableOpenShifts, overlapping: overlappingOpenShifts } = useMemo(() => {
+    const myShifts = myShiftsQuery.data ?? [];
+    const available: typeof myShifts = [];
+    const overlapping: typeof myShifts = [];
+    for (const shift of openShiftsQuery.data ?? []) {
+      if (myShifts.some((s) => shiftsOverlap(s, shift))) overlapping.push(shift);
+      else available.push(shift);
+    }
+    return { available, overlapping };
+  }, [openShiftsQuery.data, myShiftsQuery.data]);
 
   const availabilityQuery = useQuery({
     queryKey: ['availability'],
@@ -108,6 +137,16 @@ export default function ShiftsScreen() {
         </View>
       </View>
 
+      {(tab === 'schedule' || tab === 'open') && (
+        <View className="flex-row items-center justify-between gap-2 px-4 pb-2">
+          <Button label="← Prev" size="sm" variant="secondary" onPress={prevWeek} />
+          <TouchableOpacity onPress={() => setWeekStart(new Date())}>
+            <Text className="text-xs font-medium text-gray-500">{formatRange(from, to)}</Text>
+          </TouchableOpacity>
+          <Button label="Next →" size="sm" variant="secondary" onPress={nextWeek} />
+        </View>
+      )}
+
       <ScrollView
         className="flex-1 px-4 pt-4"
         contentContainerClassName="gap-3 pb-6"
@@ -119,7 +158,7 @@ export default function ShiftsScreen() {
               availabilityQuery.isRefetching
             }
             onRefresh={() => {
-              if (tab === 'schedule') myShiftsQuery.refetch();
+              if (tab === 'schedule' || tab === 'open') myShiftsQuery.refetch();
               if (tab === 'open') openShiftsQuery.refetch();
               if (tab === 'availability') availabilityQuery.refetch();
             }}
@@ -160,24 +199,50 @@ export default function ShiftsScreen() {
             ) : (openShiftsQuery.data ?? []).length === 0 ? (
               <Text className="text-sm text-gray-400">No open shifts available.</Text>
             ) : (
-              (openShiftsQuery.data ?? []).map((shift) => (
-                <Card key={shift.id}>
-                  <View className="flex-row items-center justify-between">
-                    <View>
-                      <Text className="font-semibold text-gray-800">{formatDate(shift.date)}</Text>
-                      <Text className="text-xs text-gray-500">
-                        {formatShiftTime(shift.startTime)} – {formatShiftTime(shift.endTime)}
-                      </Text>
+              <>
+                {availableOpenShifts.map((shift) => (
+                  <Card key={shift.id}>
+                    <View className="flex-row items-center justify-between">
+                      <View>
+                        <Text className="font-semibold text-gray-800">{formatDate(shift.date)}</Text>
+                        <Text className="text-xs text-gray-500">
+                          {formatShiftTime(shift.startTime)} – {formatShiftTime(shift.endTime)}
+                        </Text>
+                      </View>
+                      <Button
+                        label="Claim"
+                        size="sm"
+                        onPress={() => claimMutation.mutate(shift.id)}
+                        loading={claimMutation.isPending && claimMutation.variables === shift.id}
+                      />
                     </View>
-                    <Button
-                      label="Claim"
-                      size="sm"
-                      onPress={() => claimMutation.mutate(shift.id)}
-                      loading={claimMutation.isPending && claimMutation.variables === shift.id}
-                    />
-                  </View>
-                </Card>
-              ))
+                  </Card>
+                ))}
+
+                {overlappingOpenShifts.length > 0 && (
+                  <>
+                    <Text className="mt-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Overlaps your schedule
+                    </Text>
+                    {overlappingOpenShifts.map((shift) => (
+                      <Card key={shift.id} className="opacity-50">
+                        <View className="flex-row items-center justify-between">
+                          <View>
+                            <Text className="font-semibold text-gray-800">{formatDate(shift.date)}</Text>
+                            <Text className="text-xs text-gray-500">
+                              {formatShiftTime(shift.startTime)} – {formatShiftTime(shift.endTime)}
+                            </Text>
+                          </View>
+                          <Button label="Claim" size="sm" variant="secondary" disabled />
+                        </View>
+                        <Text className="mt-1 text-xs text-amber-600">
+                          Conflicts with a shift you already have that day
+                        </Text>
+                      </Card>
+                    ))}
+                  </>
+                )}
+              </>
             )}
           </>
         )}

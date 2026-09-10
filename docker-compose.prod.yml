@@ -1,18 +1,16 @@
-# Production / staging compose
-# Build image: docker compose -f docker-compose.prod.yml build
-# Deploy:      docker compose -f docker-compose.prod.yml up -d
-
-x-backend-build: &backend-build
-  build:
-    context: .
-    dockerfile: apps/backend/Dockerfile
-  image: hectohr-backend:latest
-  restart: unless-stopped
-  logging:
-    driver: json-file
-    options:
-      max-size: "10m"
-      max-file: "3"
+# Production compose — pull-only, no build contexts.
+# Images are built and pushed by scripts/deploy/build-and-push.sh (run locally,
+# from a full checkout); this file only pulls and runs them.
+#
+# First-time / after a new image tag:
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# One-off jobs (not started by `up -d`, profile-gated):
+#   docker compose -f docker-compose.prod.yml run --rm seed
+#   docker compose -f docker-compose.prod.yml run --rm superadmin-create <email> <password>
+#
+# See docs/deployment.md for the full VPS setup walkthrough.
 
 x-logging: &default-logging
   logging:
@@ -21,7 +19,50 @@ x-logging: &default-logging
       max-size: "10m"
       max-file: "3"
 
+x-backend-image: &backend-image
+  image: ${REGISTRY:-ghcr.io/zanvencelj}/hectohr-backend:${IMAGE_TAG:-latest}
+  <<: *default-logging
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  REDIS_TLS: ${REDIS_TLS:-}
+  SMTP_HOST: ${SMTP_HOST:?SMTP_HOST is required}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_SECURE: ${SMTP_SECURE:-}
+  SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.com}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+
 services:
+  # ── Edge ─────────────────────────────────────────────────────────────────────
+
+  web:
+    image: ${REGISTRY:-ghcr.io/zanvencelj}/hectohr-web:${IMAGE_TAG:-latest}
+    <<: *default-logging
+    ports:
+      - "80:80"
+      - "443:443"
+    # Some hosts hand containers a resolv.conf pointing at the host's
+    # systemd-resolved stub (127.0.0.53), which isn't reachable from inside a
+    # container's own network namespace — breaks every outbound DNS lookup,
+    # which for this service means every ACME (cert) request. Pin real public
+    # resolvers so cert issuance doesn't depend on the host's DNS setup.
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    environment:
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-admin@hectohr.com}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   # ── Infrastructure ───────────────────────────────────────────────────────────
 
   postgres:
@@ -64,8 +105,12 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+    # Port 9000 (S3 API) is reached by both `web` (public, via files.hectohr.com)
+    # and `backend` (presigning) over the internal compose network — no publish
+    # needed. Console (9001) is loopback-only; tunnel over SSH to reach it:
+    #   ssh -L 9001:localhost:9001 <deploy-host>
     ports:
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -96,11 +141,7 @@ services:
   # ── App ──────────────────────────────────────────────────────────────────────
 
   migrate:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
-      target: migrator
-    image: hectohr-migrator:latest
+    image: ${REGISTRY:-ghcr.io/zanvencelj}/hectohr-migrator:${IMAGE_TAG:-latest}
     <<: *default-logging
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
@@ -112,37 +153,32 @@ services:
     restart: on-failure:3
 
   backend:
-    <<: *backend-build
+    <<: *backend-image
+    # Loopback-only direct access for debugging; public access goes through
+    # `web` (Caddy) via the same-origin /api proxy on app.hectohr.com and
+    # admin.hectohr.com — see deploy/Caddyfile.
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "127.0.0.1:${BACKEND_PORT:-3000}:3000"
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     environment:
+      <<: *backend-env
       NODE_ENV: production
       PORT: 3000
       SERVICE_NAME: backend
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
       JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-7d}
       EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:?EMAIL_VERIFICATION_SECRET is required}
-      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
-      APP_URL: ${APP_URL:?APP_URL is required}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_TLS: ${REDIS_TLS:-}
-      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST is required}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_SECURE: ${SMTP_SECURE:-}
-      SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.hectohr.com,https://admin.hectohr.com}
+      APP_URL: ${APP_URL:-https://app.hectohr.com}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
-      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-}
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-https://files.hectohr.com}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET:-hectohr}
-      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -156,25 +192,18 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    restart: unless-stopped
 
   worker:
-    <<: *backend-build
+    <<: *backend-image
     command: ["node", "worker.js"]
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     environment:
+      <<: *backend-env
       NODE_ENV: production
       SERVICE_NAME: worker
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_TLS: ${REDIS_TLS:-}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_SECURE: ${SMTP_SECURE:-}
-      SMTP_FROM: ${SMTP_FROM:-noreply@hectohr.io}
-      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -186,14 +215,41 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    restart: unless-stopped
+
+  # One-off jobs — never started by `up -d` (profile-gated). Run explicitly:
+  #   docker compose -f docker-compose.prod.yml run --rm seed
+  seed:
+    <<: *backend-image
+    profiles: ["tools"]
+    command: ["node", "seed.js"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  #   docker compose -f docker-compose.prod.yml run --rm superadmin-create <email> <password>
+  superadmin-create:
+    <<: *backend-image
+    profiles: ["tools"]
+    entrypoint: ["node", "create-superadmin.js"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hectohr}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
   # ── Monitoring ───────────────────────────────────────────────────────────────
+  # Not exposed on hectohr.com/app.hectohr.com/admin.hectohr.com — no cert or
+  # DNS is provisioned for these. Reach them over an SSH tunnel, e.g.:
+  #   ssh -L 3001:localhost:3001 <deploy-host>   # Grafana at http://localhost:3001
 
   loki:
     image: grafana/loki:3.4
     <<: *default-logging
     ports:
-      - "${LOKI_PORT:-3100}:3100"
+      - "127.0.0.1:${LOKI_PORT:-3100}:3100"
     command: -config.file=/etc/loki/loki.yml
     volumes:
       - ./monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
@@ -222,14 +278,14 @@ services:
     image: grafana/grafana:11.6
     <<: *default-logging
     ports:
-      - "${GRAFANA_PORT:-3001}:3000"
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:?GRAFANA_USER is required}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
-      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:?GRAFANA_ROOT_URL is required}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3001}
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -252,3 +308,5 @@ volumes:
   minio_data:
   loki_data:
   grafana_data:
+  caddy_data:
+  caddy_config:

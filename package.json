@@ -9,43 +9,35 @@
     "dev:worker": "nx run backend:serve-worker",
     "dev:manager": "nx run @hecto/manager:serve",
     "dev:admin": "nx run admin-app:serve",
-
+    "dev:landing": "nx run landing:serve",
     "mobile": "pnpm --filter @hecto/employee start",
     "mobile:android": "pnpm --filter @hecto/employee android",
     "mobile:ios": "pnpm --filter @hecto/employee ios",
     "mobile:build:android": "pnpm --filter @hecto/employee build:android",
     "mobile:build:ios": "pnpm --filter @hecto/employee build:ios",
-
     "visitor": "pnpm --filter @hecto/visitor start",
     "visitor:android": "pnpm --filter @hecto/visitor android",
     "visitor:ios": "pnpm --filter @hecto/visitor ios",
     "visitor:build:android": "pnpm --filter @hecto/visitor build:android",
     "visitor:build:ios": "pnpm --filter @hecto/visitor build:ios",
-
     "build": "nx run-many --target=build",
     "build:backend": "nx run backend:build",
     "build:manager": "nx run @hecto/manager:build",
     "build:admin": "nx run @hecto/admin:build",
-
     "test": "nx run-many --target=test",
     "test:affected": "nx affected --target=test",
-
     "lint": "nx run-many --target=lint",
     "lint:fix": "nx run-many --target=lint -- --fix",
     "lint:affected": "nx affected --target=lint",
-
     "typecheck": "nx run-many --target=typecheck",
     "typecheck:affected": "nx affected --target=typecheck",
-
     "graph": "nx graph",
     "graph:affected": "nx affected:graph",
-
     "clean:cache": "nx reset",
     "clean:dist": "find . -name 'dist' -not -path '*/node_modules/*' -prune -exec rm -rf {} +",
     "clean:modules": "find . -name 'node_modules' -prune -exec rm -rf {} +",
     "clean": "pnpm clean:cache && pnpm clean:dist",
     "clean:all": "pnpm clean && pnpm clean:modules",
-
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

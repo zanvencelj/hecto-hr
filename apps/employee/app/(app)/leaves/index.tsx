@@ -82,8 +82,9 @@ export default function LeavesScreen() {
   });
 
   const handleSubmit = () => {
-    if (!selectedType || !startDate || !endDate) return;
+    if (!user || !selectedType || !startDate || !endDate) return;
     createMutation.mutate({
+      userId: user.id,
       leaveTypeId: selectedType.id,
       startDate: toISODate(startDate),
       endDate: toISODate(endDate),
@@ -240,9 +241,8 @@ export default function LeavesScreen() {
                 onChangeText={setNotes}
                 placeholder="Add a note..."
                 multiline
-                numberOfLines={3}
                 className="min-h-20"
-                style={{ textAlignVertical: 'top', paddingTop: 10 }}
+                style={{ textAlignVertical: 'top' }}
               />
             </FormField>
 

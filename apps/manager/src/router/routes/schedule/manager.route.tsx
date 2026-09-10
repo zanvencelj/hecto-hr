@@ -154,6 +154,8 @@ function ScheduleManagerPage() {
     return map;
   }, [shifts]);
 
+  const openShifts = useMemo(() => shifts?.filter((s) => !s.userId) ?? [], [shifts]);
+
   function openCreate(employeeId?: string, date?: string) {
     setModal({ open: true, mode: 'create', prefillEmployee: employeeId, prefillDate: date });
   }
@@ -318,6 +320,29 @@ function ScheduleManagerPage() {
                     </td>
                   </tr>
                 )}
+                <tr className="bg-amber-50/40">
+                  <td className="border border-gray-200 px-3 py-2 align-top font-medium text-amber-800">
+                    Open shifts
+                  </td>
+                  {days.map((d) => (
+                    <DayCell
+                      key={d}
+                      date={d}
+                      isToday={d === todayStr}
+                      shifts={openShifts.filter((s) => s.date === d)}
+                      onAdd={() => openCreate(undefined, d)}
+                      onEdit={openEdit}
+                      onDeleted={() => {
+                        qc.invalidateQueries({ queryKey: ['shifts'] });
+                        toast('Shift deleted');
+                      }}
+                      onDeleteError={(msg) => toast(msg, 'error')}
+                    />
+                  ))}
+                  <td className="border border-gray-200 px-3 py-2 text-center text-xs font-medium text-gray-500">
+                    —
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -570,15 +595,15 @@ function ShiftForm({
         });
       }
       return apiClient.post('/shifts', {
-        userId,
+        userId: userId || undefined,
         date,
         startTime,
         endTime,
         notes: notes || undefined,
-        isRecurring,
-        recurringDays: isRecurring ? recurringDays : undefined,
-        recurringStartDate: isRecurring ? date : undefined,
-        recurringEndDate: isRecurring && recurringEndDate ? recurringEndDate : undefined,
+        isRecurring: isRecurring && !!userId,
+        recurringDays: isRecurring && userId ? recurringDays : undefined,
+        recurringStartDate: isRecurring && userId ? date : undefined,
+        recurringEndDate: isRecurring && userId && recurringEndDate ? recurringEndDate : undefined,
       });
     },
     onSuccess,
@@ -597,13 +622,13 @@ function ShiftForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {mode === 'create' && (
-          <FormField label="Employee *" className="sm:col-span-2">
+          <FormField label="Employee" className="sm:col-span-2">
             <select
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               className="h-10 w-full border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
-              <option value="">Select employee…</option>
+              <option value="">Open shift (unassigned — employees can claim it)</option>
               {employees.filter((e) => e.isActive).map((e) => (
                 <option key={e.id} value={e.id}>
                   {[e.firstName, e.lastName].filter(Boolean).join(' ') || e.email}
@@ -630,7 +655,7 @@ function ShiftForm({
         </FormField>
       </div>
 
-      {mode === 'create' && (
+      {mode === 'create' && userId && (
         <>
           <div className="flex items-center gap-2">
             <input
@@ -679,7 +704,7 @@ function ShiftForm({
           size="sm"
           onClick={() => save.mutate()}
           loading={save.isPending}
-          disabled={!date || (mode === 'create' && !userId)}
+          disabled={!date}
         >
           {mode === 'create' ? 'Create shift' : 'Save changes'}
         </Button>

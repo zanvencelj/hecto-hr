@@ -1,4 +1,5 @@
 import type { AccessTokenPayload } from '@hecto/shared-types';
+import type { CompanySettingsService } from '@hecto/company-settings';
 import { LeaveService, countWeekdays } from './leave.service';
 import type { LeaveRepository, LeaveRequestWithType } from './leave.repository';
 
@@ -48,6 +49,20 @@ function makeRepo(overrides: Partial<jest.Mocked<LeaveRepository>> = {}): jest.M
   } as jest.Mocked<LeaveRepository>;
 }
 
+function makeCompanySettingsService(
+  weekendDays: number[] = [0, 6],
+): jest.Mocked<CompanySettingsService> {
+  return {
+    getSettings: jest.fn().mockResolvedValue({
+      organizationId: 'org-1',
+      name: 'Org',
+      weekendDays,
+      unpaidBreakThresholdMinutes: 60,
+    }),
+    updateSettings: jest.fn(),
+  } as unknown as jest.Mocked<CompanySettingsService>;
+}
+
 function makeUser(overrides: Partial<AccessTokenPayload> = {}): AccessTokenPayload {
   return {
     sub: 'user-1',
@@ -94,7 +109,7 @@ describe('LeaveService accrual/deduction math', () => {
       const repo = makeRepo({
         createRequest: jest.fn().mockResolvedValue(makeRequestRow()),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.createLeaveRequest(
         {
@@ -116,7 +131,7 @@ describe('LeaveService accrual/deduction math', () => {
       const repo = makeRepo({
         createRequest: jest.fn().mockResolvedValue(makeRequestRow({ isManualEntry: true, status: 'approved' })),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.createLeaveRequest(
         {
@@ -136,7 +151,7 @@ describe('LeaveService accrual/deduction math', () => {
 
     it('rejects a zero-length range instead of silently booking 0 days', async () => {
       const repo = makeRepo();
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await expect(
         service.createLeaveRequest(
@@ -157,7 +172,7 @@ describe('LeaveService accrual/deduction math', () => {
           .mockResolvedValueOnce({ ...pendingRequest, status: 'approved' }),
         updateRequest: jest.fn().mockResolvedValue({ ...pendingRequest, status: 'approved' }),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.reviewLeaveRequest('req-1', { status: 'approved' } as never, makeUser({ role: 'manager' }));
 
@@ -174,7 +189,7 @@ describe('LeaveService accrual/deduction math', () => {
           .mockResolvedValueOnce({ ...pendingRequest, status: 'rejected' }),
         updateRequest: jest.fn().mockResolvedValue({ ...pendingRequest, status: 'rejected' }),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.reviewLeaveRequest('req-1', { status: 'rejected' } as never, makeUser({ role: 'manager' }));
 
@@ -187,7 +202,7 @@ describe('LeaveService accrual/deduction math', () => {
       const repo = makeRepo({
         findRequestById: jest.fn().mockResolvedValue(makeRequestRow({ status: 'approved' })),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await expect(
         service.reviewLeaveRequest('req-1', { status: 'approved' } as never, makeUser({ role: 'manager' })),
@@ -201,7 +216,7 @@ describe('LeaveService accrual/deduction math', () => {
       const repo = makeRepo({
         findRequestById: jest.fn().mockResolvedValue(makeRequestRow({ status: 'pending', totalDays: '2' })),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.cancelLeaveRequest('req-1', makeUser());
 
@@ -214,7 +229,7 @@ describe('LeaveService accrual/deduction math', () => {
       const repo = makeRepo({
         findRequestById: jest.fn().mockResolvedValue(makeRequestRow({ status: 'approved', totalDays: '2' })),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.cancelLeaveRequest('req-1', makeUser({ role: 'manager' }));
 
@@ -232,7 +247,7 @@ describe('LeaveService accrual/deduction math', () => {
           .mockResolvedValueOnce(approvedRequest)
           .mockResolvedValueOnce({ ...approvedRequest, totalDays: '5' }),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.editRequestDays('req-1', 5, makeUser({ role: 'admin' }));
 
@@ -249,7 +264,7 @@ describe('LeaveService accrual/deduction math', () => {
           .mockResolvedValueOnce(pendingRequest)
           .mockResolvedValueOnce({ ...pendingRequest, totalDays: '2' }),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await service.editRequestDays('req-1', 2, makeUser({ role: 'admin' }));
 
@@ -263,7 +278,7 @@ describe('LeaveService accrual/deduction math', () => {
       const repo = makeRepo({
         findRequestById: jest.fn().mockResolvedValue(makeRequestRow()),
       });
-      const service = new LeaveService(repo);
+      const service = new LeaveService(repo, makeCompanySettingsService());
 
       await expect(
         service.editRequestDays('req-1', 0, makeUser({ role: 'admin' })),

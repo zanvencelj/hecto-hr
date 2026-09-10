@@ -1,0 +1,57 @@
+{
+	email {$CADDY_ACME_EMAIL:admin@hectohr.com}
+}
+
+www.hectohr.com {
+	redir https://hectohr.com{uri} permanent
+}
+
+# Landing page — marketing/presentation site. Proxies /api/app-links only, so
+# the mobile download links (managed from the admin app) can be fetched without
+# baking them into the built bundle.
+hectohr.com {
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+	handle {
+		root * /srv/landing
+		encode gzip
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Manager web app (vodje, kadrovska služba). Same-origin /api/* proxy means
+# no CORS is needed for browser calls made from this domain.
+app.hectohr.com {
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+	handle {
+		root * /srv/manager
+		encode gzip
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Admin web app (superadmin). Same reasoning as app.hectohr.com above —
+# /api/admin/* is proxied to the same backend, still same-origin for this domain.
+admin.hectohr.com {
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+	handle {
+		root * /srv/admin
+		encode gzip
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Public S3-compatible endpoint for visitor-signature images. Presigned GET
+# URLs are signed against this exact host (MINIO_PUBLIC_ENDPOINT), so this is
+# a plain passthrough reverse proxy — no path rewriting.
+files.hectohr.com {
+	reverse_proxy minio:9000
+}

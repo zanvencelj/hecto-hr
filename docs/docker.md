@@ -2,6 +2,10 @@
 
 This guide covers the Docker Compose setup, containerization, and deployment strategies.
 
+> Deploying to the actual hectohr.com VPS? See [`docs/deployment.md`](./deployment.md) for the
+> domain/registry-specific walkthrough (Caddy, GHCR, `scripts/deploy/*.sh`, demo seeding). This
+> doc stays generic — Dockerfile stages, compose mechanics, backups, monitoring.
+
 ## Overview
 
 The project includes:
@@ -285,6 +289,11 @@ libs/*/node_modules
 Keeping `.env` out of the build context prevents secrets from leaking into the image.
 
 ## Deployment Strategies
+
+The examples below are generic illustrations of the build → push → run pattern for other
+registries/platforms. The concrete, working implementation of this pattern for this project's
+actual VPS (GHCR + Caddy + docker-compose.prod.yml) is `scripts/deploy/build-and-push.sh` +
+`scripts/deploy/deploy.sh` — see [`docs/deployment.md`](./deployment.md).
 
 ### Cloud Deployment
 

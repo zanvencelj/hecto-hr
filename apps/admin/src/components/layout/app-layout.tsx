@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/organizations', label: 'Organizations' },
   { to: '/users', label: 'Users' },
   { to: '/audit-logs', label: 'Audit Log' },
+  { to: '/app-links', label: 'App Links' },
 ];
 
 interface AppLayoutProps {

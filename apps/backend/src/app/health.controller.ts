@@ -4,6 +4,7 @@ import { HealthCheck, HealthCheckService, HealthIndicatorResult } from '@nestjs/
 import Redis from 'ioredis';
 import { sql } from 'drizzle-orm';
 import { DATABASE_CONNECTION, type Database } from '@hecto/database';
+import { Public } from '@hecto/auth';
 
 @Controller('health')
 export class HealthController implements OnModuleDestroy {
@@ -28,6 +29,7 @@ export class HealthController implements OnModuleDestroy {
     await this.redis.quit();
   }
 
+  @Public()
   @Get()
   @HealthCheck()
   check() {

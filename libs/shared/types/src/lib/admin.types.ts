@@ -85,3 +85,8 @@ export const ADMIN_ORG_ENTITY_TYPES = [
 ] as const;
 
 export type AdminOrgEntityType = (typeof ADMIN_ORG_ENTITY_TYPES)[number];
+
+export interface AppLinks {
+  androidApkUrl: string | null;
+  iosDownloadUrl: string | null;
+}

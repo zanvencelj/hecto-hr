@@ -19,6 +19,13 @@ function getDayOfWeek(dateStr: string): number {
   return new Date(dateStr).getDay();
 }
 
+function shiftTimesOverlap(
+  a: { startTime: string; endTime: string },
+  b: { startTime: string; endTime: string },
+): boolean {
+  return a.startTime < b.endTime && b.startTime < a.endTime;
+}
+
 @Injectable()
 export class ShiftsService {
   constructor(private readonly shiftsRepo: ShiftsRepository) {}
@@ -215,6 +222,20 @@ export class ShiftsService {
         'Shift claiming is paused while a schedule draft is under review',
       );
     }
+
+    const shift = await this.shiftsRepo.findShiftById(id, currentUser.organizationId);
+    if (!shift) throw new NotFoundException('Shift not found');
+
+    const sameDayShifts = await this.shiftsRepo.findShiftsForEmployeeOnDate(
+      currentUser.sub,
+      currentUser.organizationId,
+      shift.date,
+    );
+    const overlaps = sameDayShifts.some((s) => shiftTimesOverlap(s, shift));
+    if (overlaps) {
+      throw new ConflictException('You already have a shift that overlaps with this one');
+    }
+
     const claimed = await this.shiftsRepo.claimShift(id, currentUser.sub);
     if (!claimed) throw new ConflictException('Shift is no longer available');
     return this.toPublic({ ...claimed, breaks: [] });

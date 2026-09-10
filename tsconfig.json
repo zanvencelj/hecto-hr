@@ -68,6 +68,12 @@
     },
     {
       "path": "./libs/backend/scheduling"
+    },
+    {
+      "path": "./apps/landing"
+    },
+    {
+      "path": "./libs/backend/company-settings"
     }
   ]
 }

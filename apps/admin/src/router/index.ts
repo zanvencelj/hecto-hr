@@ -9,6 +9,7 @@ import { organizationDetailRoute } from './routes/organizations/detail.route';
 import { usersListRoute } from './routes/users/list.route';
 import { userDetailRoute } from './routes/users/detail.route';
 import { auditLogsRoute } from './routes/audit-logs.route';
+import { appLinksRoute } from './routes/app-links.route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -17,6 +18,7 @@ const routeTree = rootRoute.addChildren([
   usersListRoute,
   userDetailRoute,
   auditLogsRoute,
+  appLinksRoute,
   authLayoutRoute.addChildren([loginRoute]),
 ]);
 

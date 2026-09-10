@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { getMyEvents } from '@/services/events.service';
 import { getMyShifts } from '@/services/shifts.service';
 import { createChangeRequest, getMyChangeRequests } from '@/services/history.service';
+import { getCompanySettings } from '@/services/company-settings.service';
 
 const EVENT_LABELS: Record<WorkEventType, string> = {
   arrival: 'Arrival',
@@ -81,7 +82,19 @@ function groupEventsByDay(events: WorkEventPublic[]): Record<string, WorkEventPu
   return groups;
 }
 
-function calculateWorkedMinutes(events: WorkEventPublic[]): number {
+function calculateExpectedMinutes(shifts: { startTime: string; endTime: string }[]): number {
+  return shifts.reduce((acc, s) => {
+    const [sh, sm] = s.startTime.split(':').map(Number);
+    const [eh, em] = s.endTime.split(':').map(Number);
+    return acc + (eh! * 60 + em!) - (sh! * 60 + sm!);
+  }, 0);
+}
+
+function calculateWorkedMinutes(
+  events: WorkEventPublic[],
+  unpaidBreakThresholdMinutes: number = 60,
+  asOf: Date = new Date(),
+): number {
   const sorted = [...events].sort(
     (a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime(),
   );
@@ -101,7 +114,10 @@ function calculateWorkedMinutes(events: WorkEventPublic[]): number {
       if (breakStart) { breakMs += t.getTime() - breakStart.getTime(); breakStart = null; }
     }
   }
-  return Math.round(workedMs / 60000 - Math.max(0, breakMs / 60000 - 60));
+  // Still clocked in / on break with no closing event yet — count up to now.
+  if (breakStart) breakMs += asOf.getTime() - breakStart.getTime();
+  if (workStart) workedMs += asOf.getTime() - workStart.getTime();
+  return Math.round(workedMs / 60000 - Math.max(0, breakMs / 60000 - unpaidBreakThresholdMinutes));
 }
 
 interface ChangeRequestFormProps {
@@ -274,6 +290,13 @@ export default function HistoryScreen() {
     queryFn: getMyChangeRequests,
   });
 
+  const { data: companySettings } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: getCompanySettings,
+    staleTime: 5 * 60_000,
+  });
+  const unpaidBreakThresholdMinutes = companySettings?.unpaidBreakThresholdMinutes;
+
   const submitMutation = useMutation({
     mutationFn: createChangeRequest,
     onSuccess: (_, vars) => {
@@ -325,8 +348,14 @@ export default function HistoryScreen() {
   }, [eventsQuery.isLoading, todayIndex]);
 
   const totalWorked = daysList.reduce((acc, day) => {
-    return acc + calculateWorkedMinutes(groupedEvents[day] ?? []);
+    return acc + calculateWorkedMinutes(groupedEvents[day] ?? [], unpaidBreakThresholdMinutes);
   }, 0);
+
+  const totalExpected = calculateExpectedMinutes(
+    shifts.filter((s) => daysList.includes(s.date)),
+  );
+  const hasExpected = totalExpected > 0;
+  const monthDiff = totalWorked - totalExpected;
 
   const goToPrevMonth = () => {
     if (selectedMonth === 0) { setSelectedYear(y => y - 1); setSelectedMonth(11); }
@@ -366,6 +395,14 @@ export default function HistoryScreen() {
         <View className="items-center">
           <Text className="text-base font-semibold text-gray-900">{monthLabel}</Text>
           <Text className="text-xs text-gray-500">Total: {formatMinutes(totalWorked)}</Text>
+          {hasExpected && (
+            <Text
+              className={`text-xs font-medium ${monthDiff >= 0 ? 'text-green-600' : 'text-amber-600'}`}
+            >
+              {monthDiff >= 0 ? '+' : ''}
+              {formatMinutes(monthDiff)} vs expected
+            </Text>
+          )}
         </View>
         <TouchableOpacity onPress={goToNextMonth} hitSlop={8} style={{ opacity: isCurrentMonth ? 0.3 : 1 }}>
           <Ionicons name="chevron-forward" size={22} color="#374151" />
@@ -392,7 +429,7 @@ export default function HistoryScreen() {
             const dayEvents = (groupedEvents[day] ?? []).sort(
               (a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime(),
             );
-            const worked = calculateWorkedMinutes(dayEvents);
+            const worked = calculateWorkedMinutes(dayEvents, unpaidBreakThresholdMinutes);
             const shift = shiftByDate[day];
             const [year, month, dayNum] = day.split('-');
             const dayLabel = `${dayNum}.${month}.${year}`;

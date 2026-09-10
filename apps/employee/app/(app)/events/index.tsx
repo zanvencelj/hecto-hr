@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { usePreferencesStore, DEFAULT_ORDER } from "@/stores/preferences.store";
 import { createEvent, getMyEvents } from "@/services/events.service";
 import { getMyShifts } from "@/services/shifts.service";
+import { getCompanySettings } from "@/services/company-settings.service";
 
 const EVENT_META: Record<WorkEventType, { label: string; color: string }> = {
   arrival: { label: "Arrival", color: "#16a34a" },
@@ -138,7 +139,11 @@ function todayDateString(): string {
   return new Date().toISOString().split("T")[0]!;
 }
 
-function calculateWorkedMinutes(events: WorkEventPublic[]): number {
+function calculateWorkedMinutes(
+  events: WorkEventPublic[],
+  unpaidBreakThresholdMinutes: number = 60,
+  asOf: Date = new Date(),
+): number {
   const sorted = [...events].sort(
     (a, b) =>
       new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime(),
@@ -169,7 +174,10 @@ function calculateWorkedMinutes(events: WorkEventPublic[]): number {
       }
     }
   }
-  return Math.round(workedMs / 60000 - Math.max(0, breakMs / 60000 - 60));
+  // Still clocked in / on break with no closing event yet — count up to now.
+  if (breakStart) breakMs += asOf.getTime() - breakStart.getTime();
+  if (workStart) workedMs += asOf.getTime() - workStart.getTime();
+  return Math.round(workedMs / 60000 - Math.max(0, breakMs / 60000 - unpaidBreakThresholdMinutes));
 }
 
 function calculateExpectedMinutes(
@@ -354,6 +362,12 @@ export default function EventsScreen() {
   const { from, to } = todayRange();
   const today = todayDateString();
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [, tick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const {
     data: events = [],
@@ -371,6 +385,12 @@ export default function EventsScreen() {
     enabled: !!user,
   });
 
+  const { data: companySettings } = useQuery({
+    queryKey: ["company-settings"],
+    queryFn: getCompanySettings,
+    staleTime: 5 * 60_000,
+  });
+
   const {
     mutate: logEvent,
     isPending,
@@ -380,7 +400,10 @@ export default function EventsScreen() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   });
 
-  const workedMinutes = calculateWorkedMinutes(events);
+  const workedMinutes = calculateWorkedMinutes(
+    events,
+    companySettings?.unpaidBreakThresholdMinutes,
+  );
   const expectedMinutes = calculateExpectedMinutes(todayShifts);
   const hasShift = todayShifts.length > 0;
   const currentState = getCurrentState(events);

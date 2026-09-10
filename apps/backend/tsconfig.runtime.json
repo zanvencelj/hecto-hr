@@ -5,6 +5,9 @@
   },
   "references": [
     {
+      "path": "../../libs/backend/company-settings/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/backend/admin/tsconfig.lib.json"
     },
     {
