@@ -1,0 +1,198 @@
+\chapter{Načrtovanje}
+\label{ch:nacrtovanje}
+
+\tikzset{
+  entity/.style={draw, rectangle, rounded corners=1pt, align=left, font=\small, minimum width=3.3cm, inner sep=6pt},
+  relarrow/.style={-{Latex[length=2mm]}, thick},
+  rellabel/.style={font=\scriptsize, fill=white, inner sep=1pt},
+}
+
+V tem poglavju so opisane zajete zahteve, podatkovni model in arhitektura razvite aplikacije. Odločitve, predstavljene v tem poglavju, so podlaga za izbiro tehnologij v poglavju~\ref{ch:tehnologije} in za opis delovanja sistema v poglavju~\ref{ch:sistem}.
+
+\section{Zajemanje zahtev}
+\label{sec:zahteve}
+
+Zahteve smo zajeli na podlagi lastne analize tipičnih kadrovskih procesov v manjših in srednje velikih podjetjih ter pregleda funkcionalnosti obstoječih komercialnih rešitev, predstavljenih v poglavju~\ref{sec:komercialne-resitve}. Ker diplomsko delo ne vključuje formalnega naročnika, smo si pri opredelitvi zahtev pomagali z vlogami, ki v realni organizaciji sodelujejo pri kadrovskih procesih: administrator platforme, kadrovska služba, vodja tima in zaposleni. Zahteve smo med razvojem večkrat dopolnili, saj se je izkazalo, na primer pri razporejanju izmen, da posamezne poenostavitve (na primer, da ima zaposleni le binarno razpoložljivost, torej da/ne) ne zadostujejo za realistično uporabo.
+
+\subsection{Funkcionalne zahteve}
+
+Funkcionalne zahteve smo razvrstili glede na vlogo uporabnika.
+
+\begin{description}
+    \item[Administrator] upravlja organizacije na platformi (ustvarjanje, onemogočanje, brisanje), pregleduje uporabnike in revizijsko sled sprememb ne glede na organizacijo, ne posega pa v vsakodnevne kadrovske procese posamezne organizacije.
+    \item[Kadrovska služba] upravlja zaposlene (vabila, profili, vloge), nastavlja tipe odsotnosti in njihova pravila ter potrjuje ali zavrača zahtevke za odsotnost.
+    \item[Vodja] upravlja urnik svojega tima: ročno ustvarja in ureja izmene, ustvarja ponavljajoče se izmene in predloge zasedenosti, sproži samodejno generiranje osnutka urnika, ga po potrebi ročno popravi in ga objavi. Vodja tudi potrjuje ali zavrača zahtevke za popravek dogodkov delovnega časa.
+    \item[Zaposleni] beleži dogodke delovnega časa (prihod, odhod, odmor, delo od doma, službena pot), oddaja zahtevke za popravek že vnesenih dogodkov, nastavlja svojo tedensko razpoložljivost in preference, prevzema odprte izmene ter oddaja zahtevke za odsotnost.
+\end{description}
+
+Zahteve, skupne več vlogam, so še: prijava v sistem z geslom in preverjanjem elektronskega naslova, pregled lastne zgodovine dogodkov, izmen in odsotnosti ter prejemanje obvestil o pomembnih dogodkih (na primer objava urnika).
+
+\subsection{Nefunkcionalne zahteve}
+
+\begin{itemize}
+    \item \textbf{Podpora več organizacijam:} sistem mora na eni namestitvi podpirati več neodvisnih organizacij, pri čemer podatki ene organizacije ne smejo biti vidni drugi (t.\,i. \textit{multi-tenancy}). Tovrstno ločevanje podatkov med strankami je standardna arhitekturna praksa vseh v poglavju~\ref{sec:komercialne-resitve} obravnavanih oblačnih rešitev.
+    \item \textbf{Nadzor dostopa:} vsak API klic mora preveriti tako pristnost uporabnika kot tudi njegovo vlogo, preden dovoli dostop do posameznega vira.
+    \item \textbf{Dostopnost na več napravah:} vodje in kadrovska služba delo opravljajo v spletnem brskalniku, zaposleni pa dogodke delovnega časa najpogosteje beležijo prek mobilne naprave, zato mora sistem ponuditi tako spletno kot mobilno aplikacijo.
+    \item \textbf{Odzivno delovanje:} operacije, ki niso nujno sinhrone (na primer pošiljanje e-pošte in potisnih obvestil), naj ne blokirajo odziva na uporabnikovo zahtevo.
+    \item \textbf{Sledljivost:} spremembe, ki jih izvede administrator platforme, morajo biti zabeležene v revizijski sledi.
+\end{itemize}
+
+\section{Podatkovni model}
+\label{sec:podatkovni-model}
+
+Odločili smo se za relacijski podatkovni model. Skoraj vse tabele, ki pripadajo posamezni organizaciji, vsebujejo tuji ključ \texttt{organization\_id}, kar omogoča ločevanje podatkov med organizacijami na ravni posamezne vrstice (t.\,i. vzorec \textit{row-level multi-tenancy}). Izjema je tabela \texttt{organizations} sama ter tabela \texttt{admin\_audit\_logs}, ki jo uporablja izključno administrator platforme in presega meje posamezne organizacije. Zaradi preglednosti podatkovni model predstavimo po posameznih domenah: identiteta in organizacije (slika~\ref{fig:er-identiteta}), evidenca delovnega časa (slika~\ref{fig:er-delovni-cas}), razporejanje izmen (slika~\ref{fig:er-razporejanje}), upravljanje odsotnosti (slika~\ref{fig:er-dopusti}) in podatkovni model dodatnega kiosk modula za evidenco obiskov (slika~\ref{fig:er-obiski}). Poleg prikazanih entitet podatkovna baza vsebuje še podporne tabele za seje, vabila, ponastavitve gesla in preverjanje elektronske pošte, ki jih zaradi preglednosti v diagramih ne prikazujemo posebej.
+
+\subsection{Identiteta in organizacije}
+
+Slika~\ref{fig:er-identiteta} prikazuje osrednje entitete za upravljanje identitete. Vsak uporabnik (tabela \texttt{users}, v nadaljevanju podpoglavja so v oklepajih navedene tabele) pripada največ eni organizaciji (\texttt{organizations}) in ima natanko eno izmed vlog: \texttt{admin}, \texttt{hr}, \texttt{manager}, \texttt{employee} ali \texttt{superadmin}. Slednjo ima izključno administrator platforme, ki organizaciji ne pripada. Uporabnik z vlogo \texttt{employee} ima dodaten profil (\texttt{employee\_profiles}) s kadrovskimi podatki, na primer delovnim mestom, oddelkom in datumom zaposlitve.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.85, transform shape, node distance=1.6cm and 2.6cm]
+    \node[entity] (org) {\textbf{organizations}\\id (PK)\\name, slug\\is\_active, deleted\_at};
+    \node[entity, right=of org] (users) {\textbf{users}\\id (PK)\\organization\_id (FK)\\email, role\\first\_name, last\_name};
+    \node[entity, below=of users] (profile) {\textbf{employee\_profiles}\\id (PK)\\user\_id (FK, 1:1)\\position, department\\hire\_date};
+
+    \draw[relarrow] (org) -- (users) node[rellabel, midway, above] {1:N};
+    \draw[relarrow] (users) -- (profile) node[rellabel, midway, right] {1:1};
+\end{tikzpicture}
+\caption{Poenostavljen podatkovni model identitete in organizacij.}
+\label{fig:er-identiteta}
+\end{figure}
+\FloatBarrier
+
+\subsection{Evidenca delovnega časa}
+
+Slika~\ref{fig:er-delovni-cas} prikazuje del podatkovnega modela za evidenco časa. Zaposleni dogodke delovnega časa beleži kot vrstice v tabeli \texttt{work\_events}, pri čemer tip dogodka (prihod, odhod, začetek in konec odmora, delo od doma, začetek in konec službene poti) določa nabor \texttt{work\_event\_type}. Ker se dogodki beležijo v realnem času in napake pri vnosu niso redke, ima zaposleni možnost oddati zahtevek za popravek (\texttt{event\_change\_requests}), ki lahko obstoječ dogodek doda, uredi ali izbriše. Zahtevek pa potrdi ali zavrne vodja.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.6cm and 2.8cm]
+    \node[entity] (users) {\textbf{users}\\id (PK)};
+    \node[entity, right=of users] (events) {\textbf{work\_events}\\id (PK)\\user\_id (FK)\\type, occurred\_at};
+    \node[entity, right=of events] (changes) {\textbf{event\_change\_requests}\\id (PK)\\event\_id (FK, opc.)\\user\_id (FK)\\request\_type, status};
+
+    \draw[relarrow] (users) -- (events) node[rellabel, midway, above] {1:N};
+    \draw[relarrow] (events) -- (changes) node[rellabel, midway, above] {1:N};
+\end{tikzpicture}%
+}
+\caption{Podatkovni model evidence delovnega časa in zahtevkov za popravek.}
+\label{fig:er-delovni-cas}
+\end{figure}
+\FloatBarrier
+
+\subsection{Razporejanje izmen}
+
+Osrednja entiteta razporejanja je izmena (\texttt{shifts}), ki je vezana na organizacijo, opcijsko pa tudi na uporabnika, ki jo bo opravil, izmena brez dodeljenega uporabnika je odprta izmena, ki jo lahko prevzame kateri koli ustrezen zaposleni. Izmena lahko nastane ročno, iz ponavljajočega se vzorca (\texttt{recurring\_shifts}) ali iz predloge zasedenosti (\texttt{staffing\_templates}), ki za posamezen dan v tednu določa željeno število zaposlenih. Pri samodejnem razporejanju vodja ustvari osnutek urnika (\texttt{schedule\_drafts}) za izbrano obdobje, reševalnik nato za vsako izmeno v tem obdobju predlaga dodelitev (\texttt{schedule\_draft\_assignments}) ob upoštevanju razpoložljivosti in preferenc zaposlenega (\texttt{employee\_availability}). Ta del podatkovnega modela prikazuje slika~\ref{fig:er-razporejanje}, delovanje reševalnika pa podrobneje opišemo v poglavju~\ref{ch:sistem}.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.5cm and 1.9cm]
+    \node[entity] (recurring) {\textbf{recurring\_shifts}\\id (PK)};
+    \node[entity, below=of recurring] (staffing) {\textbf{staffing\_templates}\\id (PK)};
+    \node[entity, right=2.3cm of recurring, yshift=-0.8cm] (shifts) {\textbf{shifts}\\id (PK)\\user\_id (FK, opc.)\\date, start\_time, end\_time\\is\_open};
+    \node[entity, right=2.3cm of shifts] (assign) {\textbf{schedule\_draft\_}\\\textbf{assignments}\\id (PK)\\draft\_id (FK)\\shift\_id (FK)\\user\_id (FK), status};
+    \node[entity, above=of assign] (draft) {\textbf{schedule\_drafts}\\id (PK)\\date\_from, date\_to\\status};
+    \node[entity, below=of shifts] (avail) {\textbf{employee\_availability}\\id (PK)\\user\_id (FK)\\day\_of\_week, preference};
+
+    \draw[relarrow] (recurring) -- (shifts) node[rellabel, midway, above, sloped] {1:N};
+    \draw[relarrow] (staffing) -- (shifts) node[rellabel, midway, above, sloped] {1:N};
+    \draw[relarrow] (shifts) -- (assign) node[rellabel, midway, above] {1:N};
+    \draw[relarrow] (draft) -- (assign) node[rellabel, midway, right] {1:N};
+    \draw[relarrow, dashed] (avail) -- (assign) node[rellabel, midway, above, sloped] {upošteva};
+\end{tikzpicture}%
+}
+\caption{Podatkovni model razporejanja izmen in samodejnega generiranja urnika.}
+\label{fig:er-razporejanje}
+\end{figure}
+\FloatBarrier
+
+\subsection{Upravljanje odsotnosti}
+
+Del podatkovnega modela, ki se nanaša na odsotnost je prikazan na sliki~\ref{fig:er-dopusti}. Vsaka organizacija si nastavi lastne tipe odsotnosti (\texttt{leave\_types}), na primer letni dopust ali bolniška odsotnost, vsakemu pa določi, ali je plačan, in privzeto letno kvoto dni. Za vsakega zaposlenega in vsak tip odsotnosti se po letih vodi stanje (\texttt{leave\_balances}) s skupnim, izrabljenim in čakajočim številom dni. Zahtevek za odsotnost (\texttt{leave\_requests}) gre skozi delovni tok od oddaje do odobritve ali zavrnitve.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.85, transform shape, node distance=1.6cm and 2.6cm]
+    \node[entity] (types) {\textbf{leave\_types}\\id (PK)\\name, code\\is\_paid};
+    \node[entity, right=of types] (balances) {\textbf{leave\_balances}\\id (PK)\\user\_id (FK)\\leave\_type\_id (FK)\\year, total/used/pending};
+    \node[entity, below=of balances] (requests) {\textbf{leave\_requests}\\id (PK)\\user\_id (FK)\\leave\_type\_id (FK)\\start/end\_date, status};
+
+    \draw[relarrow] (types) -- (balances) node[rellabel, midway, above] {1:N};
+    \draw[relarrow] (types) -- (requests) node[rellabel, midway, right, sloped] {1:N};
+\end{tikzpicture}
+\caption{Podatkovni model upravljanja odsotnosti.}
+\label{fig:er-dopusti}
+\end{figure}
+\FloatBarrier
+
+\subsection{Evidenca obiskov}
+\label{sec:podatkovni-model-obiski}
+
+Ta del podatkovnega modela prikazuje slika~\ref{fig:er-obiski}. Dodatni kiosk modul, opisan v razdelku~\ref{sec:sistem-obiski}, potrebuje lasten, majhen del podatkovnega modela. Tablica na recepciji se organizaciji priklopi (spari) s kodo za paritev (\texttt{kiosk\_pairing\_codes}), ki jo ustvari administrator organizacije in velja omejen čas. Ob uspešnem parjenju zaledje ustvari trajen zapis naprave (\texttt{kiosk\_devices}) z zgoščenim žetonom za dostop naprave. Vsak obisk (\texttt{visits}) je vezan na organizacijo in napravo, prek katere je bil vnesen. Hrani pa ime in namen obiska ter sklic na podpis, shranjen v objektno shrambo (angl. object storage).
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.6cm and 2.6cm]
+    \node[entity] (codes) {\textbf{kiosk\_pairing\_codes}\\id (PK)\\code\_hash, expires\_at};
+    \node[entity, right=of codes] (devices) {\textbf{kiosk\_devices}\\id (PK)\\token\_hash\\revoked\_at};
+    \node[entity, right=of devices] (visits) {\textbf{visits}\\id (PK)\\device\_id (FK, opc.)\\name, purpose\\signature\_key\\signed\_in/out\_at};
+
+    \draw[relarrow] (codes) -- (devices) node[rellabel, midway, above] {parjenje};
+    \draw[relarrow] (devices) -- (visits) node[rellabel, midway, above] {1:N};
+\end{tikzpicture}%
+}
+\caption{Podatkovni model evidence obiskov.}
+\label{fig:er-obiski}
+\end{figure}
+\FloatBarrier
+
+\section{Arhitektura sistema}
+\label{sec:arhitektura}
+
+Sistem je zasnovan po arhitekturi odjemalec-strežnik. Zaledje je ena sama aplikacija REST, ki jo uporabljajo štiri odjemalske aplikacije: spletna aplikacija za vodje in kadrovsko službo, mobilna aplikacija za zaposlene, ločena spletna aplikacija za administratorja platforme ter kiosk aplikacija na tablici za evidenco obiskov. Vsi zapisi domenskih podatkov so shranjeni v skupni podatkovni bazi PostgreSQL, do katere odjemalci dostopajo izključno prek zaledne aplikacije. Slike podpisov obiskovalcev zaledje namesto v bazo shrani v objektno shrambo, združljivo z vmesnikom S3. Opravila, ki jih ni treba obdelati sinhrono med spletno zahtevo, na primer pošiljanje e-pošte ali potisnih obvestil, zaledje odloži v čakalno vrsto, ki jo obdeluje ločen proces delavca (angl. \textit{worker}). Slika~\ref{fig:arhitektura} prikazuje visokonivojsko arhitekturo sistema.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.4cm and 1.4cm,
+    comp/.style={draw, rectangle, rounded corners=2pt, align=center, font=\small, minimum width=2.6cm, minimum height=1cm},
+    ext/.style={draw, rectangle, dashed, align=center, font=\small, minimum width=2.4cm, minimum height=1cm},
+    arr/.style={-{Latex[length=2mm]}, thick}]
+
+    \node[comp] (manager) {Spletna aplikacija\\(vodje, kadrovska služba)};
+    \node[comp, right=of manager] (admin) {Spletna aplikacija\\(administrator)};
+    \node[comp, right=of admin] (mobile) {Mobilna aplikacija\\(zaposleni)};
+    \node[comp, right=of mobile] (kiosk) {Kiosk aplikacija\\(obiski)};
+
+    \node[comp, below=2.1cm of mobile] (api) {Zaledna aplikacija (REST API)};
+
+    \node[comp, below left=1.6cm and -0.6cm of api] (db) {PostgreSQL};
+    \node[comp, below=1.6cm of api] (storage) {Object storage (S3)};
+    \node[comp, below right=1.6cm and -0.6cm of api] (queue) {Čakalna vrsta\\(Redis)};
+    \node[comp, below=1.4cm of queue] (worker) {Proces delavca};
+    \node[ext, below left=1.2cm and -0.6cm of worker] (mail) {SMTP strežnik};
+    \node[ext, below right=1.2cm and -0.6cm of worker] (push) {Storitev za\\potisna obvestila};
+
+    \draw[arr] (manager) -- (api);
+    \draw[arr] (admin) -- (api);
+    \draw[arr] (mobile) -- (api);
+    \draw[arr] (kiosk) -- (api);
+    \draw[arr] (api) -- (db);
+    \draw[arr] (api) -- (storage);
+    \draw[arr] (api) -- (queue);
+    \draw[arr] (queue) -- (worker);
+    \draw[arr] (worker) -- (mail);
+    \draw[arr] (worker) -- (push);
+    \draw[arr] (worker) -- (db);
+\end{tikzpicture}%
+}
+\caption{Visokonivojska arhitektura sistema.}
+\label{fig:arhitektura}
+\end{figure}
+\FloatBarrier
+
+Znotraj zaledne aplikacije je koda razdeljena na module po domenah, na primer avtentikacija, zaposleni, izmene, razporejanje, odsotnosti, dogodki in administracija, kar je podrobneje opisano v poglavju~\ref{ch:sistem}. Vsak dostop do zaščitenega vira zaledje preveri v dveh korakih: najprej preveri veljavnost dostopnega žetona, nato pa še, ali vloga uporabnika ustreza vlogam, ki jih posamezen vir dovoljuje. Ta mehanizem je podrobneje opisan v poglavju~\ref{ch:sistem} skupaj z ostalimi vidiki delovanja sistema.

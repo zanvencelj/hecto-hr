@@ -1,0 +1,33 @@
+\chapter{Tehnologije}
+\label{ch:tehnologije}
+
+V tem poglavju na kratko naštejemo in utemeljimo izbiro tehnologij, s katerimi smo zgradili sistem, opisan v poglavju~\ref{ch:nacrtovanje}.
+
+\section{Organizacija projekta}
+
+Celoten projekt je organiziran kot enoten repozitorij (t.\,i. \textit{monorepo}), upravljan z orodjem Nx. Nx omogoča, da zaledje, oba spletna odjemalca in mobilno aplikacijo vzdržujemo v enem repozitoriju, si delijo skupne knjižnice (na primer tipe podatkov in validacijske sheme) in imajo enotno orodje za gradnjo, testiranje in preverjanje odvisnosti med moduli. Za upravljanje paketov uporabljamo pnpm, za tipski nadzor pa TypeScript v celotnem projektu, tako na zaledju kot na obeh vrstah odjemalcev.
+
+\section{Zaledje}
+
+Zaledna aplikacija je zgrajena na ogrodju NestJS, ki nad Node.js ponuja modularno strukturo z vbrizgavanjem odvisnosti (angl. \textit{dependency injection}), kar omogoča ločevanje kode po domenskih modulih. Za dostop do podatkovne baze PostgreSQL uporabljamo Drizzle ORM, ki poizvedbe tipsko preveri že v času prevajanja in migracije sheme upravlja s samostojnimi datotekami SQL, kar omogoča natančen nadzor nad spremembami sheme. Za odložena opravila, na primer pošiljanje e-pošte in potisnih obvestil, uporabljamo knjižnico BullMQ, ki čakalno vrsto hrani v pomnilniški podatkovni bazi Redis in jo v ločenem procesu delavca obdeluje zunaj glavne zahteve. Gesla zaposlenih hranimo zgoščena z algoritmom Argon2, za avtentikacijo pa uporabljamo dostopne in osvežitvene žetone JWT.
+
+\section{Spletna odjemalca}
+
+Spletni aplikaciji za vodje in kadrovsko službo ter za administratorja platforme sta zgrajeni s knjižnico React in orodjem Vite. Za usmerjanje in pridobivanje podatkov s strežnika uporabljamo TanStack Router in TanStack Query, ki poskrbita za predpomnjenje, ponovno pridobivanje in usklajevanje stanja s strežnikom, ne da bi za to potrebovali ločen globalni shranjevalnik stanja za vsak posamezen vir podatkov. Za manjše količine lokalnega stanja uporabniškega vmesnika, ki ni neposredno vezano na strežniške podatke, uporabimo Zustand. Za oblikovanje uporabljamo ogrodje Tailwind CSS, za preverjanje oblik in odgovorov strežnika pa knjižnico Zod.
+
+\section{Mobilna aplikacija}
+
+Mobilno aplikacijo za zaposlene smo zgradili z ogrodjem Expo nad React Native, kar omogoča razvoj ene kodne baze za Android in iOS. Za oblikovanje uporabniškega vmesnika uporabljamo NativeWind, ki v mobilno okolje prenese enak način stiliziranja z razredi, kot ga uporabljamo v spletnih odjemalcih s Tailwind CSS, kar olajša skupno razumevanje oblikovanja med vsemi odjemalskimi aplikacijami.
+
+\section{Podatkovna baza in infrastruktura}
+
+Za primarno shrambo podatkov uporabljamo relacijsko podatkovno bazo PostgreSQL. Slike podpisov obiskovalcev iz razdelka~\ref{sec:sistem-obiski} namesto v relacijsko bazo shranjujemo v objektno shrambo, prek vmesnika S3, kar prepreči nepotrebno rast same podatkovne baze z binarno vsebino. Za razvojno okolje uporabljamo Docker Compose, ki poleg PostgreSQL zažene še Redis za čakalno vrsto, MinIO kot lokalno združljivo zamenjavo za S3 ter Mailhog, ki v razvoju prestreže odhodno e-pošto brez dejanskega pošiljanja.
+
+\section{Namestitev v produkcijsko okolje}
+\label{sec:namestitev}
+
+Zaledno aplikacijo in oba spletna odjemalca namestimo na navidezni zasebni strežnik pri ponudniku Hetzner. Za zaledje, proces delavca in obratni posrednik (opisan spodaj) iz istega repozitorija zgradimo tri samostojne slike vsebnika Docker in jih naložimo v GitHub Container Registry (GHCR). Namestitveni strežnik nobene slike ne gradi sam, temveč jih ob vsaki namestitvi zgolj prenese in zažene z orodjem Docker Compose prek datoteke \texttt{docker-compose.prod.yml}. Slike označimo z identifikatorjem spremembe (angl. \textit{commit hash}) v nadzoru različic Git, kar ob morebitni okvari omogoča vrnitev na predhodno različico, ne da bi bilo treba karkoli ponovno graditi.
+
+Edini del sistema, izpostavljen internetu, je obratni posrednik (angl. \textit{reverse proxy}) Caddy, ki samodejno pridobi in obnavlja potrdila TLS prek protokola ACME ter dohodne zahteve usmerja glede na domeno. Spletni aplikaciji za vodje in kadrovsko službo ter za administratorja platforme vsaka na svoji domeni strežeta lastne statične datoteke, pot \texttt{/api/*} pa obe posredujeta isti zaledni aplikaciji. Ker gre pri tem za zahtevo z istim izvorom (angl. \textit{same-origin}), se odjemalcema ni treba ukvarjati z omejitvami CORS. Objektna shramba iz razdelka~\ref{sec:arhitektura} je izpostavljena na ločeni domeni, saj so povezave do shranjenih datotek podpisane glede na točno določen naslov gostitelja. Pred zagonom zaledne aplikacije in procesa delavca se enkratno požene še storitev za migracije podatkovne baze, ki počaka na dokončanje vseh čakajočih migracij sheme, šele nato pa se zaženeta preostali dve storitvi. Podatkovno bazo vsako noč samodejno varnostno kopiramo z omejenim številom hranjenih kopij, delovanje celotnega sistema pa nadziramo z orodjema Grafana in Loki za beleženje in pregledovanje dnevnikov.
+
+Mobilno aplikacijo za zaposlene distribuiramo ločeno od zaledja in spletnih odjemalcev, saj gradnjo za Android in iOS namesto lokalno izvedemo v oblaku prek storitve EAS Build ponudnika Expo. Gradnja za Android vrne namestitveno datoteko (APK), ki jo uporabnik namesti neposredno na napravo, gradnja za iOS pa zaradi omejitev platforme Apple zahteva veljaven razvijalski račun Apple Developer in podpisano različico, ki jo prek storitve TestFlight objavimo testnim uporabnikom. Slednji aplikacijo namestijo prek namenske aplikacije TestFlight, ne da bi bilo treba njihove naprave predhodno registrirati v našem računu Apple Developer.

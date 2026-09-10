@@ -1,0 +1,51 @@
+\chapter{Pregled področja in sorodnih del}
+\label{ch:sorodna}
+
+V tem poglavju umestimo našo rešitev v obstoječi kontekst. Najprej predstavimo nekaj uveljavljenih komercialnih rešitev za upravljanje kadrovskih procesov, nato pa pregledamo raziskovalno literaturo s področij, na katera se pri načrtovanju sistema neposredno naslanjamo: razporejanje osebja, dostop na osnovi vlog in vrednotenje uporabnosti.
+
+\section{Komercialne rešitve}
+\label{sec:komercialne-resitve}
+
+Na trgu obstaja več uveljavljenih platform za upravljanje kadrovskih procesov. \textbf{BambooHR}~\cite{bamboohr} je celovit kadrovski informacijski sistem, osredotočen predvsem na ameriški trg in ameriško delovnopravno zakonodajo, ki poleg evidence zaposlenih ponuja tudi orodja za ocenjevanje uspešnosti in obračun plač. \textbf{Personio}~\cite{personio} sledi podobnemu konceptu, vendar je zasnovan za evropske trge in evropsko delovnopravno regulativo. \textbf{Deputy}~\cite{deputy} in \textbf{When I Work}~\cite{wheniwork} se v primerjavi z BambooHR in Personiem bolj osredotočata na razporejanje izmen in evidenco delovnega časa za urne delavce, na primer v gostinstvu in trgovini.
+
+Naštete rešitve se med seboj razlikujejo tudi po tem, katere od obravnavanih funkcionalnosti dejansko pokrivajo. Vse štiri ponujajo evidenco delovnega časa in upravljanje odsotnosti, saj gre za osnovni gradnik vsake kadrovske rešitve. Pri razporejanju izmen je razlika večja: BambooHR je zmožnost ročnega razporejanja izmen dodal kot ločen modul Time \& Attendance~\cite{bamboohr}, Personio lastnega modula za razporejanje izmen nima, temveč samodejno generiranje urnika ponuja posredno, preko integracije z ločeno storitvijo Shiftbase~\cite{personio}, medtem ko sta Deputy in When I Work razporejanju izmen namenjena že od začetka, poleg ročnega urejanja pa oba ponujata tudi samodejno generiranje urnika glede na razpoložljivost zaposlenih~\cite{deputy,wheniwork}. Po drugi strani sta Bamboo\-HR in Personio celovitejša kadrovska informacijska sistema s širšo evidenco zaposlenih (kadrovski profili, organizacijska struktura, obračun plač), medtem ko sta Deputy in When I Work osredotočena predvsem na razporejanje in evidenco delovnega časa za urne delavce, širšo kadrovsko evidenco pa ponujata le v omejenem obsegu. Tabela~\ref{tab:komercialne-primerjava} povzame primerjavo funkcionalnosti.
+
+\begin{table}[htbp]
+\centering
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{p{5.3cm}ccccc}
+    \toprule
+Funkcionalnost & BambooHR & Personio & Deputy & When I Work & Naša rešitev \\
+\midrule
+Evidenca delovnega časa & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+Razporejanje izmen (ročno) & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+Samodejno generiranje osnutka urnika & -- & \textit{prek integracije} & \checkmark & \checkmark & \checkmark \\
+Upravljanje odsotnosti & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+Širša evidenca zaposlenih (kadrovski profil) & \checkmark & \checkmark & \textit{delno} & \textit{delno} & \checkmark \\
+Vsi navedeni moduli v osnovnem paketu, brez doplačila & \textit{delno} & -- & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Primerjava funkcionalnosti razvite rešitve z izbranimi komercialnimi rešitvami.}
+\label{tab:komercialne-primerjava}
+\end{table}
+
+Kot prikazuje tabela, noben od pregledanih izdelkov ne združuje evidence delovnega časa, samodejnega razporejanja izmen, upravljanja odsotnosti in širše evidence zaposlenih v enem samem sistemu: BambooHR in Personio te procese ponujata kot ločene, dodatno plačljive module, Deputy in When I Work pa jih sicer združujeta, a brez celovitejšega kadrovskega modula. Poleg tega gre pri vseh štirih za naročniške storitve v oblaku, pri katerih organizacija nima vpogleda v izvorno kodo niti možnosti prilagoditve podatkovnega modela ali poslovne logike lastnim potrebam. Naša rešitev se od naštetih razlikuje po tem, da je zasnovana kot enoten, odprt sistem, v katerem so vsi štirje procesi od začetka povezani na skupnem podatkovnem modelu, poleg tega pa vključuje tudi nadzorni vmesnik, za upravljanje več organizacij na eni platformi.
+
+\section{Razporejanje osebja}
+\label{sec:razporejanje-osebja}
+
+Razporejanje osebja (angl. \textit{staff scheduling}, \textit{personnel scheduling}) je v operacijskih raziskavah dobro poznan problem. Ernst in sodelavci~\cite{ernst2004staff} v pregledni razpravi razporejanje osebja razdelijo na več podproblemov, na primer določanje potreb po kadrih, dodeljevanje izmen posameznikom in sestavljanje ciklov dela in počitka, ter podajo pregled metod, s katerimi jih rešujemo, od eksaktnih metod, kot je celoštevilsko programiranje, do hevrističnih in metahevrističnih pristopov, na primer genetskih algoritmov in požrešnih hevristik. Van den Bergh in sodelavci~\cite{vandenbergh2013personnel} v novejšem pregledu literature izpostavijo, da mora realen model razporejanja upoštevati povpraševanje po kadrih, prilagodljivo umeščanje odmorov, nadurno delo in preference zaposlenih, sicer poenostavi problem do te mere, da rešitev v praksi ni uporabna. Podobno tudi novejše delo Liuja in sodelavcev~\cite{liu2024flexible} problem razporejanja osebja obravnava kot NP-težek in predlaga hitro hevristično metodo, ki poišče dovolj dobro rešitev v razumnem času, namesto da bi iskala dokazano optimalno rešitev.
+
+Pri načrtovanju modula za samodejno razporejanje (poglavje~\ref{ch:nacrtovanje}) se naslanjamo prav na to zadnjo smer literature: namesto eksaktnega ali metahevrističnega reševalnika, ki bi za vsak urnik iskal optimalno rešitev, uporabimo požrešno (angl. \textit{greedy}) hevristiko, ki izmene dodeljuje zaposlenim po vrstnem redu ob upoštevanju trdih omejitev, na primer odsotnosti, razpoložljivosti, prekrivanja izmen, tedenske omejitve ur in minimalnega počitka med izmenama, ter mehkih kriterijev, na primer preferenc zaposlenih in enakomerne porazdelitve ur med zaposlenimi. Tak pristop je hitrejši in enostavnejši za razumevanje in vzdrževanje kot eksaktni ali metahevristični pristopi, cena za to pa je, da dobljeni urnik ni nujno optimalen, temveč zgolj dovolj dober izhodiščni osnutek, ki ga vodja lahko še ročno popravi.
+
+\section{Dostop na osnovi vlog}
+\label{sec:rbac-sorodna}
+
+Dostop na osnovi uporabniških vlog je model za upravljanje pravic dostopa, pri katerem pravice niso dodeljene neposredno posameznim uporabnikom, temveč vlogam, uporabniki pa so tem vlogam nato dodeljeni. Sandhu in sodelavci~\cite{sandhu1996rbac} so v temeljnem delu na tem področju predstavili družino referenčnih modelov RBAC, od osnovnega modela, ki povezuje uporabnike, vloge in pravice, do razširitev s hierarhijo vlog in ločevanjem dolžnosti. V razviti aplikaciji uporabimo poenostavljeno različico osnovnega modela s štirimi fiksnimi vlogami, administratorjem, kadrovsko službo, vodjo in zaposlenim, pri čemer nimamo hierarhije vlog, kar podrobneje opišemo v poglavjih~\ref{ch:nacrtovanje} in~\ref{ch:sistem}.
+
+\section{Vrednotenje zaznane uporabnosti}
+\label{sec:vrednotenje-uporabnosti}
+
+Za vrednotenje zaznane uporabnosti poslovnih aplikacij sta uveljavljena predvsem dva kratka standardizirana vprašalnika. \textit{System Usability Scale} (SUS), ki ga je predlagal Brooke~\cite{brooke1996sus}. Vsebuje deset trditev, na katere uporabnik odgovarja s petstopenjsko lestvico strinjanja (Likertovo lestvico), odgovori pa se pretvorijo v skupno oceno med 0 in 100. Finstad~\cite{finstad2010umux} je pozneje predlagal krajši, štiritrditveni vprašalnik \textit{Usability Metrics For User Expirience} (UMUX), ki naj bi dajal primerljive rezultate kot SUS, a je hitrejši za izpolnjevanje. Ker gre za standardizirana in v raziskovalni literaturi pogosto uporabljena vprašalnika, ju uporabimo tudi pri vrednotenju razvite rešitve v poglavju~\ref{ch:evalvacija}.

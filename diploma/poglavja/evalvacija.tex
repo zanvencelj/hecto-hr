@@ -1,0 +1,75 @@
+\chapter{Evalvacija}
+\label{ch:evalvacija}
+
+V tem poglavju preverimo hipotezi H2 in H3 iz razdelka~\ref{sec:hipoteze} tako, da razvito rešitev preizkusimo s testnimi uporabniki in njihovo oceno zaznane uporabnosti ovrednotimo s standardiziranim vprašalnikom System Usability Scale (SUS)~\cite{brooke1996sus}, ki smo ga izbrali med sorodnimi vprašalniki.
+
+\section{Udeleženci in postopek}
+\label{sec:eval-postopek}
+
+Za testiranje smo povabili 12 testnih uporabnikov izmed kolegov, družinskih članov in prijateljev, katerih demografsko in poklicno ozadje ustreza ciljni skupini aplikacije (zaposleni v manjših podjetjih, vodje manjših timov). Povprečna starost udeležencev je znašala 27,0 let (standardni odklon 9,7 leta), med njimi so bile 3 ženske in 9 moških. Vsak udeleženec je v vlogi zaposlenega, vodje ali kadrovske službe opravil kratek nabor nalog, ki pokrivajo osrednje module sistema, opisane v poglavju~\ref{ch:sistem}:
+
+\begin{enumerate}
+    \item prijava v sistem in beleženje dogodka delovnega časa (prihod, odmor, odhod) v mobilni aplikaciji,
+    \item oddaja zahtevka za dopust in, v vlogi vodje ali kadrovske službe, odobritev zahtevka drugega udeleženca,
+    \item v vlogi vodje: samodejno generiranje osnutka urnika za teden dni, pregled predlaganih dodelitev in objava urnika,
+    \item prevzem odprte izmene v vlogi zaposlenega.
+\end{enumerate}
+
+Po zaključenih nalogah je vsak udeleženec izpolnil vprašalnik SUS, predstavljen v razdelku~\ref{sec:eval-sus}. Testiranje je potekalo samostojno na lastni napravi, izvedba naštetih nalog (brez izpolnjevanja vprašalnika) pa je v povprečju trajala 10 minut.
+
+\section{Vprašalnik SUS}
+\label{sec:eval-sus}
+
+Vprašalnik SUS sestavlja deset trditev, na katere udeleženec odgovori s petstopenjsko lestvico strinjanja, pri čemer 1 pomeni ``sploh se ne strinjam'' in 5 ``popolnoma se strinjam''. Trditve smo prevedli v slovenščino:
+
+\begin{enumerate}
+    \item Mislim, da bi to aplikacijo rad(-a) uporabljal(-a) pogosto.
+    \item Aplikacija se mi je zdela po nepotrebnem zapletena.
+    \item Zdelo se mi je, da je aplikacijo enostavno uporabljati.
+    \item Mislim, da bi za uporabo te aplikacije potreboval(-a) pomoč tehnične osebe.
+    \item Zdelo se mi je, da so različne funkcije aplikacije dobro povezane med seboj.
+    \item Zdelo se mi je, da je v aplikaciji preveč neskladnosti.
+    \item Domnevam, da bi se večina ljudi zelo hitro naučila uporabljati to aplikacijo.
+    \item Aplikacija se mi je zdela zelo okorna za uporabo.
+    \item Pri uporabi aplikacije sem se počutil(-a) samozavestno.
+    \item Preden sem lahko začel(-a) uporabljati aplikacijo, sem se moral(-a) naučiti veliko stvari.
+\end{enumerate}
+
+Trditve z lihimi zaporednimi številkami so pozitivno naravnane (višja ocena pomeni boljši rezultat), s sodimi pa negativno (višja ocena pomeni slabši rezultat). Posamezno oceno SUS izračunamo tako, da pri lihih trditvah od odgovora odštejemo 1, pri sodih pa odgovor odštejemo od 5, dobljene vrednosti seštejemo in zmnožimo z 2,5, kar da končno oceno na lestvici od 0 do 100. Bangor in sodelavci~\cite{bangor2009determining} so oceni SUS dodali pridevniško lestvico, katere mejne vrednosti je potrdil tudi Hertzum~\cite{hertzum2026meta}: povprečna ocena 85 ustreza pridevniku ``odlično'', 71 ``dobro'', 51 pa ``ok'', torej približno povprečju. Za razvrščanje rezultatov v nadaljevanju te meje poenostavimo takole: oceno nad 85 uvrščamo med ``odlično'', med 71 in 85 med ``dobro'', okoli 51 predstavlja povprečje, pod 51 pa velja za slabo.
+
+\clearpage
+\section{Rezultati}
+\label{sec:eval-rezultati}
+
+Tabela~\ref{tab:sus-rezultati} povzame oceno SUS za vsakega izmed 12 udeležencev.
+
+\begin{table}[htbp]
+\centering
+\caption{Individualne in povprečna ocena SUS.}
+\label{tab:sus-rezultati}
+\begin{tabular}{lc}
+\toprule
+Udeleženec & Ocena SUS \\
+\midrule
+U1  & 90,0 \\
+U2  & 92,5 \\
+U3  & 100,0 \\
+U4  & 82,5 \\
+U5  & 92,5 \\
+U6  & 97,5 \\
+U7  & 85,0 \\
+U8  & 90,0 \\
+U9  & 67,5 \\
+U10 & 97,5 \\
+U11 & 70,0 \\
+U12 & 92,5 \\
+\midrule
+Povprečje & 88,1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\FloatBarrier
+
+Povprečna ocena SUS znaša 88,1, kar po pridevniški lestvici sodi v razred ``odlično''. Devet od dvanajstih udeležencev doseže oziroma preseže mejo 85 (``odlično''), en udeleženec, z oceno 82,5, pade v razred ``dobro'', preostala dva pa v razred okoli povprečja (51), nobena ocena pa ne pade pod mejo povprečja ali v razred ``slabo''. Take rezultate lahko pripišemo predvsem preprostosti nabora testnih nalog.
+
+Glede na dobljene rezultate hipotezo H3, da bodo uporabniki zaznano uporabnost aplikacije ocenili kot dobro, kar se bo pokazalo v povprečnem rezultatu SUS nad 71 točk, potrdimo. K hipotezi H2 o časovnem prihranku pri samodejnem razporejanju ne moremo podati enakovredno trdne trditve: v končni obliki vprašalnika ločenega vprašanja o prihranku časa v primerjavi z ročnim razporejanjem nismo vključili, zato nimamo neposredne kvantitativne potrditve. Posredno jo podpira podatek, da so udeleženci nalogo generiranja, pregleda in objave osnutka urnika med testiranjem opravili hitro in brez večjih zapletov, kar je skladno tudi z visoko oceno trditve o povezanosti funkcij aplikacije (trditev 5). Hipotezo H2 zato lahko na podlagi izvedene evalvacije potrdimo le delno. Za trdnejšo potrditev bi bilo treba, kot navajamo v razdelku~\ref{ch:zakljucek}, prihranek časa izmeriti neposredno.

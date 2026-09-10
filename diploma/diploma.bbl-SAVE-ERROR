@@ -1,0 +1,431 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global/global}
+    \entry{bamboohr}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=3c31cf7968d1f711748fcac86930791f}{%
+           family={{BambooHR LLC}},
+           familyi={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{3c31cf7968d1f711748fcac86930791f}
+      \strng{fullhash}{3c31cf7968d1f711748fcac86930791f}
+      \strng{fullhashraw}{3c31cf7968d1f711748fcac86930791f}
+      \strng{bibnamehash}{3c31cf7968d1f711748fcac86930791f}
+      \strng{authorbibnamehash}{3c31cf7968d1f711748fcac86930791f}
+      \strng{authornamehash}{3c31cf7968d1f711748fcac86930791f}
+      \strng{authorfullhash}{3c31cf7968d1f711748fcac86930791f}
+      \strng{authorfullhashraw}{3c31cf7968d1f711748fcac86930791f}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{BambooHR}}
+      \field{urlday}{10}
+      \field{urlmonth}{7}
+      \field{urlyear}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.bamboohr.com
+      \endverb
+      \verb{url}
+      \verb https://www.bamboohr.com
+      \endverb
+    \endentry
+    \entry{bangor2009determining}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=05ed7926f59ed51998e7d806c8a2ca30}{%
+           family={Bangor},
+           familyi={B\bibinitperiod},
+           given={Aaron},
+           giveni={A\bibinitperiod}}}%
+        {{hash=221e957dde9bcf783fdee858cf2b365e}{%
+           family={Kortum},
+           familyi={K\bibinitperiod},
+           given={Philip},
+           giveni={P\bibinitperiod}}}%
+        {{hash=bff0e87eeab4ba1e74ae3e776e15d490}{%
+           family={Miller},
+           familyi={M\bibinitperiod},
+           given={James},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{069c4734e30da9449cee720f93eda80e}
+      \strng{fullhash}{069c4734e30da9449cee720f93eda80e}
+      \strng{fullhashraw}{069c4734e30da9449cee720f93eda80e}
+      \strng{bibnamehash}{069c4734e30da9449cee720f93eda80e}
+      \strng{authorbibnamehash}{069c4734e30da9449cee720f93eda80e}
+      \strng{authornamehash}{069c4734e30da9449cee720f93eda80e}
+      \strng{authorfullhash}{069c4734e30da9449cee720f93eda80e}
+      \strng{authorfullhashraw}{069c4734e30da9449cee720f93eda80e}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Usability Studies}
+      \field{number}{3}
+      \field{title}{Determining what individual {SUS} scores mean: Adding an adjective rating scale}
+      \field{volume}{4}
+      \field{year}{2009}
+      \field{pages}{114\bibrangedash 123}
+      \range{pages}{10}
+    \endentry
+    \entry{brooke1996sus}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=813064283275c281401d7a7483420c67}{%
+           family={Brooke},
+           familyi={B\bibinitperiod},
+           given={John},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Taylor \& Francis}%
+      }
+      \strng{namehash}{813064283275c281401d7a7483420c67}
+      \strng{fullhash}{813064283275c281401d7a7483420c67}
+      \strng{fullhashraw}{813064283275c281401d7a7483420c67}
+      \strng{bibnamehash}{813064283275c281401d7a7483420c67}
+      \strng{authorbibnamehash}{813064283275c281401d7a7483420c67}
+      \strng{authornamehash}{813064283275c281401d7a7483420c67}
+      \strng{authorfullhash}{813064283275c281401d7a7483420c67}
+      \strng{authorfullhashraw}{813064283275c281401d7a7483420c67}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Usability Evaluation in Industry}
+      \field{title}{{SUS}: A Quick and Dirty Usability Scale}
+      \field{year}{1996}
+      \field{pages}{189\bibrangedash 194}
+      \range{pages}{6}
+    \endentry
+    \entry{deputy}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=0083de73c8ba563027a200f888b9a66b}{%
+           family={{Deputy}},
+           familyi={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{0083de73c8ba563027a200f888b9a66b}
+      \strng{fullhash}{0083de73c8ba563027a200f888b9a66b}
+      \strng{fullhashraw}{0083de73c8ba563027a200f888b9a66b}
+      \strng{bibnamehash}{0083de73c8ba563027a200f888b9a66b}
+      \strng{authorbibnamehash}{0083de73c8ba563027a200f888b9a66b}
+      \strng{authornamehash}{0083de73c8ba563027a200f888b9a66b}
+      \strng{authorfullhash}{0083de73c8ba563027a200f888b9a66b}
+      \strng{authorfullhashraw}{0083de73c8ba563027a200f888b9a66b}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{Deputy}}
+      \field{urlday}{10}
+      \field{urlmonth}{7}
+      \field{urlyear}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.deputy.com
+      \endverb
+      \verb{url}
+      \verb https://www.deputy.com
+      \endverb
+    \endentry
+    \entry{ernst2004staff}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=8e536bef045cf687ae274c4fe035e77e}{%
+           family={Ernst},
+           familyi={E\bibinitperiod},
+           given={Andreas\bibnamedelima T.},
+           giveni={A\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+        {{hash=54780410f8ee527a71f5fada22b18022}{%
+           family={Jiang},
+           familyi={J\bibinitperiod},
+           given={Houyuan},
+           giveni={H\bibinitperiod}}}%
+        {{hash=2c8ba7cde2e3342b3f5b9f5278b9741f}{%
+           family={Krishnamoorthy},
+           familyi={K\bibinitperiod},
+           given={Mohan},
+           giveni={M\bibinitperiod}}}%
+        {{hash=2fad71d8b6313660c1cab2724a760254}{%
+           family={Sier},
+           familyi={S\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier}%
+      }
+      \strng{namehash}{a9eb4c2617e1c0b687962705e11a930e}
+      \strng{fullhash}{e3b84452bfa912b7180092f3eaa10543}
+      \strng{fullhashraw}{e3b84452bfa912b7180092f3eaa10543}
+      \strng{bibnamehash}{a9eb4c2617e1c0b687962705e11a930e}
+      \strng{authorbibnamehash}{a9eb4c2617e1c0b687962705e11a930e}
+      \strng{authornamehash}{a9eb4c2617e1c0b687962705e11a930e}
+      \strng{authorfullhash}{e3b84452bfa912b7180092f3eaa10543}
+      \strng{authorfullhashraw}{e3b84452bfa912b7180092f3eaa10543}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{European Journal of Operational Research}
+      \field{number}{1}
+      \field{title}{Staff scheduling and rostering: A review of applications, methods and models}
+      \field{volume}{153}
+      \field{year}{2004}
+      \field{pages}{3\bibrangedash 27}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1016/S0377-2217(03)00095-X
+      \endverb
+    \endentry
+    \entry{finstad2010umux}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=b596d7eafdb51e56a89a9c0246eeaa19}{%
+           family={Finstad},
+           familyi={F\bibinitperiod},
+           given={Kraig},
+           giveni={K\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Oxford University Press}%
+      }
+      \strng{namehash}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{fullhash}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{fullhashraw}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{bibnamehash}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{authorbibnamehash}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{authornamehash}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{authorfullhash}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \strng{authorfullhashraw}{b596d7eafdb51e56a89a9c0246eeaa19}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Interacting with Computers}
+      \field{number}{5}
+      \field{title}{The usability metric for user experience}
+      \field{volume}{22}
+      \field{year}{2010}
+      \field{pages}{323\bibrangedash 327}
+      \range{pages}{5}
+      \verb{doi}
+      \verb 10.1016/j.intcom.2010.04.004
+      \endverb
+    \endentry
+    \entry{liu2024flexible}{article}{}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{1}{}{%
+        {{hash=4f1e33032cdd17c1c4c17fe05bd0772d}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Xin},
+           giveni={X\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Nature Publishing Group}%
+      }
+      \strng{namehash}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{fullhash}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{fullhashraw}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{bibnamehash}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{authorbibnamehash}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{authornamehash}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{authorfullhash}{e58ef8f444141f003125d39d6d0449b7}
+      \strng{authorfullhashraw}{e58ef8f444141f003125d39d6d0449b7}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Scientific Reports}
+      \field{title}{A fast-flexible strategy based approach to solving employee scheduling problem considering soft work time}
+      \field{volume}{14}
+      \field{year}{2024}
+      \verb{doi}
+      \verb 10.1038/s41598-024-56745-4
+      \endverb
+    \endentry
+    \entry{personio}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=702e0e6340c259dcc3a47ae66a4babe7}{%
+           family={{Personio SE \& Co. KG}},
+           familyi={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{fullhash}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{fullhashraw}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{bibnamehash}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{authorbibnamehash}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{authornamehash}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{authorfullhash}{702e0e6340c259dcc3a47ae66a4babe7}
+      \strng{authorfullhashraw}{702e0e6340c259dcc3a47ae66a4babe7}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{Personio}}
+      \field{urlday}{10}
+      \field{urlmonth}{7}
+      \field{urlyear}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.personio.com
+      \endverb
+      \verb{url}
+      \verb https://www.personio.com
+      \endverb
+    \endentry
+    \entry{sandhu1996rbac}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=f3b7d57399ba1dbf13fcbf28b2ad7555}{%
+           family={Sandhu},
+           familyi={S\bibinitperiod},
+           given={Ravi\bibnamedelima S.},
+           giveni={R\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=095a4cce348eec9d581b278c22ab6129}{%
+           family={Coyne},
+           familyi={C\bibinitperiod},
+           given={Edward\bibnamedelima J.},
+           giveni={E\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=777d2f53710ab0c09bf75c63fafceaa1}{%
+           family={Feinstein},
+           familyi={F\bibinitperiod},
+           given={Hal\bibnamedelima L.},
+           giveni={H\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=fea1de53df3d07042f925374a93d347e}{%
+           family={Youman},
+           familyi={Y\bibinitperiod},
+           given={Charles\bibnamedelima E.},
+           giveni={C\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{52a6131784323a5e6bed6b08eea50cb3}
+      \strng{fullhash}{10d614baecb582aa4916c475ba89caef}
+      \strng{fullhashraw}{10d614baecb582aa4916c475ba89caef}
+      \strng{bibnamehash}{52a6131784323a5e6bed6b08eea50cb3}
+      \strng{authorbibnamehash}{52a6131784323a5e6bed6b08eea50cb3}
+      \strng{authornamehash}{52a6131784323a5e6bed6b08eea50cb3}
+      \strng{authorfullhash}{10d614baecb582aa4916c475ba89caef}
+      \strng{authorfullhashraw}{10d614baecb582aa4916c475ba89caef}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{IEEE Computer}
+      \field{number}{2}
+      \field{title}{Role-based access control models}
+      \field{volume}{29}
+      \field{year}{1996}
+      \field{pages}{38\bibrangedash 47}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1109/2.485845
+      \endverb
+    \endentry
+    \entry{vandenbergh2013personnel}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=5d1775e3e8d5d3db52b40f241ec89759}{%
+           family={Van\bibnamedelimb den\bibnamedelima Bergh},
+           familyi={V\bibinitperiod\bibinitdelim d\bibinitperiod\bibinitdelim B\bibinitperiod},
+           given={Jorne},
+           giveni={J\bibinitperiod}}}%
+        {{hash=712e426c1c841df01251d3a8b763439f}{%
+           family={Beliën},
+           familyi={B\bibinitperiod},
+           given={Jeroen},
+           giveni={J\bibinitperiod}}}%
+        {{hash=fefadfc3a2e49663402068e60b269fe3}{%
+           family={De\bibnamedelima Bruecker},
+           familyi={D\bibinitperiod\bibinitdelim B\bibinitperiod},
+           given={Philippe},
+           giveni={P\bibinitperiod}}}%
+        {{hash=bafc3307ca493bc9cd04670ac182524e}{%
+           family={Demeulemeester},
+           familyi={D\bibinitperiod},
+           given={Erik},
+           giveni={E\bibinitperiod}}}%
+        {{hash=1b8183a8152271bd512b2400860e4c5c}{%
+           family={De\bibnamedelima Boeck},
+           familyi={D\bibinitperiod\bibinitdelim B\bibinitperiod},
+           given={Lieselot},
+           giveni={L\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier}%
+      }
+      \strng{namehash}{1d2ab3266c10c4b69082bd872c4afa1b}
+      \strng{fullhash}{2f4f14c156adcc2671b6168a5a311b5e}
+      \strng{fullhashraw}{2f4f14c156adcc2671b6168a5a311b5e}
+      \strng{bibnamehash}{1d2ab3266c10c4b69082bd872c4afa1b}
+      \strng{authorbibnamehash}{1d2ab3266c10c4b69082bd872c4afa1b}
+      \strng{authornamehash}{1d2ab3266c10c4b69082bd872c4afa1b}
+      \strng{authorfullhash}{2f4f14c156adcc2671b6168a5a311b5e}
+      \strng{authorfullhashraw}{2f4f14c156adcc2671b6168a5a311b5e}
+      \field{sortinit}{V}
+      \field{sortinithash}{afb52128e5b4dc4b843768c0113d673b}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{European Journal of Operational Research}
+      \field{number}{3}
+      \field{title}{Personnel scheduling: A literature review}
+      \field{volume}{226}
+      \field{year}{2013}
+      \field{pages}{367\bibrangedash 385}
+      \range{pages}{19}
+      \verb{doi}
+      \verb 10.1016/j.ejor.2012.11.029
+      \endverb
+    \endentry
+    \entry{wheniwork}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=fddcaccdbd8de6f85a50db8710105341}{%
+           family={{When I Work, Inc.}},
+           familyi={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{fullhash}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{fullhashraw}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{bibnamehash}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{authorbibnamehash}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{authornamehash}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{authorfullhash}{fddcaccdbd8de6f85a50db8710105341}
+      \strng{authorfullhashraw}{fddcaccdbd8de6f85a50db8710105341}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{When I Work}}
+      \field{urlday}{10}
+      \field{urlmonth}{7}
+      \field{urlyear}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://wheniwork.com
+      \endverb
+      \verb{url}
+      \verb https://wheniwork.com
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

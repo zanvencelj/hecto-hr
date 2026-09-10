@@ -1,0 +1,14 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'diploma.blg'
+[63] biber:342> INFO - === Thu Aug 20, 2026, 13:46:35
+[73] Biber.pm:421> INFO - Reading 'diploma.bcf'
+[112] Biber.pm:1002> INFO - Found 13 citekeys in bib section 0
+[120] Biber.pm:4487> INFO - Processing section 0
+[125] Biber.pm:4678> INFO - Looking for bibtex file 'literatura.bib' for section 0
+[126] bibtex.pm:1713> INFO - LaTeX decoding ...
+[132] bibtex.pm:1519> INFO - Found BibTeX data source 'literatura.bib'
+[216] UCollate.pm:68> INFO - Overriding locale 'sl-SI' defaults 'variable = shifted' with 'variable = non-ignorable'
+[216] UCollate.pm:68> INFO - Overriding locale 'sl-SI' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[216] Biber.pm:4307> INFO - Sorting list 'nty/global//global/global/global' of type 'entry' with template 'nty' and locale 'sl-SI'
+[228] bbl.pm:676> INFO - Writing 'diploma.bbl' with encoding 'UTF-8'
+[231] bbl.pm:779> INFO - Output to diploma.bbl

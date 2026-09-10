@@ -1,0 +1,49 @@
+\babel@toc {slovenian}{}\relax 
+\babel@toc {slovene}{}\relax 
+\contentsline {chapter}{Povzetek}{}{chapter*.1}%
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{Abstract}{}{chapter*.2}%
+\babel@toc {slovene}{}\relax 
+\contentsline {chapter}{\numberline {1}Uvod}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Cilji naloge}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Hipoteze}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Struktura diplome}{3}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Pregled področja in sorodnih del}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Komercialne rešitve}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Razporejanje osebja}{7}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Dostop na osnovi vlog}{8}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Vrednotenje zaznane uporabnosti}{8}{section.2.4}%
+\contentsline {chapter}{\numberline {3}Načrtovanje}{9}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Zajemanje zahtev}{9}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Funkcionalne zahteve}{9}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Nefunkcionalne zahteve}{10}{subsection.3.1.2}%
+\contentsline {section}{\numberline {3.2}Podatkovni model}{11}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Identiteta in organizacije}{11}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Evidenca delovnega časa}{12}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Razporejanje izmen}{13}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Upravljanje odsotnosti}{15}{subsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.2.5}Evidenca obiskov}{15}{subsection.3.2.5}%
+\contentsline {section}{\numberline {3.3}Arhitektura sistema}{16}{section.3.3}%
+\contentsline {chapter}{\numberline {4}Tehnologije}{19}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Organizacija projekta}{19}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Zaledje}{19}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Spletna odjemalca}{20}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Mobilna aplikacija}{20}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Podatkovna baza in infrastruktura}{21}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Namestitev v produkcijsko okolje}{21}{section.4.6}%
+\contentsline {chapter}{\numberline {5}Predstavitev sistema}{23}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Avtentikacija in nadzor dostopa}{24}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Upravljanje zaposlenih}{25}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Evidenca delovnega časa}{26}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Razporejanje izmen}{26}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Upravljanje odsotnosti}{29}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Evidenca obiskov}{30}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Administracija platforme}{31}{section.5.7}%
+\contentsline {chapter}{\numberline {6}Evalvacija}{33}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Udeleženci in postopek}{33}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Vprašalnik SUS}{34}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Rezultati}{36}{section.6.3}%
+\contentsline {chapter}{\numberline {7}Zaključek}{39}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Omejitve rešitve}{40}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Nadaljnje delo}{40}{section.7.2}%
+\contentsline {chapter}{Literatura}{43}{chapter*.59}%
